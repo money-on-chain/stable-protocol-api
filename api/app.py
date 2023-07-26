@@ -6,8 +6,10 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
 from api.routers import operations
 from api.routers import fastbtc
+from api.models.base import InfoApi
 
-API_VERSION = '1.1.0'
+
+API_VERSION = '1.0.0'
 API_TITLE = 'Stable Protocol v0 API'
 API_DESCRIPTION = 'Stable Protocol v0 API'
 
@@ -34,7 +36,9 @@ app.add_middleware(
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=getenv("ALLOWED_HOSTS", default=["*"]))
 
 
-@app.get("/infoapi")
+@app.get("/infoapi",
+         response_description="Returns information about this api",
+         response_model=InfoApi)
 async def info_api():
     return {
         "title": API_TITLE,
