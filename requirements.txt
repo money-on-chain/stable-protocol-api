@@ -1,5 +1,5 @@
 fastapi
 motor
-pydantic
+pydantic==2.0.3
 pymongo
 uvicorn

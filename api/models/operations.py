@@ -16,7 +16,11 @@ EXCLUDED_EVENTS = [
     "SettlementRedeemStableToken",
     "TransferFromMoC",
     "QueueDOC"
-],
+]
+
+
+def mongo_date_to_str(x):
+    return str(x.isoformat(timespec='milliseconds'))+"Z"
 
 
 class Transactions(BaseModel):

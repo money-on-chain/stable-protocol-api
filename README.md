@@ -18,10 +18,10 @@ copy .example.env .env
 # Edit .env file and change settings point Mongo DB uris 
 
 # Start the service
-uvicorn app:app --reload
+uvicorn api.app:app --reload
 ```
 
 ### Interactive API docs
 
-Go to http://127.0.0.1:8000/docs
+Go to http://localhost:8000/
 
