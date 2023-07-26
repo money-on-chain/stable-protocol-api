@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Query
-from typing import Optional, List, Dict
 from typing import Annotated
 
 from api.db import db
-from api.models.operations import Transactions, TokenName, EXCLUDED_EVENTS, mongo_date_to_str
+from api.models.operations import TokenName, EXCLUDED_EVENTS, mongo_date_to_str, TransactionsList
 
 
 router = APIRouter()
@@ -13,7 +12,7 @@ router = APIRouter()
     "/api/v1/webapp/transactions/list/",
     tags=["operations"],
     response_description="List operations of the given address user",
-    response_model=Dict #List[Transactions]
+    response_model=TransactionsList
 )
 async def transactions_list(
         address: Annotated[str, Query(

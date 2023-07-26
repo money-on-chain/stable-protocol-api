@@ -62,3 +62,18 @@ class Transactions(BaseModel):
                 "event": "TEST"
             }
         }
+
+
+class TransactionsList(BaseModel):
+    transactions: List[Transactions]
+    count: int = 0
+    total: int = 0
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "transactions": "[]",
+                "count": "0",
+                "total": "0"
+            }
+        }
