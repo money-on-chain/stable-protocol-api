@@ -31,7 +31,7 @@ Go to http://localhost:8000/
 Build, change path to correct environment
 
 ```
-docker build -t stable_protocol_api -f Dockerfile .
+docker build -t stable_protocol_api -f Dockerfile.api .
 ```
 
 Run
