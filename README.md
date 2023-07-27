@@ -25,3 +25,25 @@ uvicorn api.app:app --reload
 
 Go to http://localhost:8000/
 
+
+### Docker (Recommended)
+
+Build, change path to correct environment
+
+```
+docker build -t stable_protocol_api -f Dockerfile .
+```
+
+Run
+
+```
+docker run -d \
+--name stable_protocol_api_roc_mainnet \
+--env APP_MONGO_URI=mongodb://localhost:27017 \
+--env APP_MONGO_DB=roc_mainnet \
+--env BACKEND_CORS_ORIGINS=["*"] \
+--env ALLOWED_HOSTS=["*"] \
+stable_protocol_api
+```
+
+
