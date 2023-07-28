@@ -2,6 +2,7 @@ import datetime
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from enum import Enum
+import uuid
 
 
 class TokenName(Enum):
@@ -24,6 +25,7 @@ def mongo_date_to_str(x):
 
 
 class Transactions(BaseModel):
+    id: str = Field(default_factory=uuid.uuid4, alias="_id")
     address: Optional[str]
     transactionHash: Optional[str]
     blockNumber: Optional[int] = None
@@ -56,6 +58,7 @@ class Transactions(BaseModel):
     otherAddress: Optional[str] = None
 
     class Config:
+        #allow_population_by_field_name = True
         json_schema_extra = {
             "example": {
                 "address": "0x0000000",

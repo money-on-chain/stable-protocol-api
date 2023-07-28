@@ -47,18 +47,15 @@ async def transactions_list(
 
     for trx in transactions:
         trx['_id'] = str(trx['_id'])
-        if trx['createdAt']:
+
+        if trx.get("createdAt"):
             trx['createdAt'] = mongo_date_to_str(trx['createdAt'])
-        else:
-            trx['createdAt'] = ''
-        if trx['lastUpdatedAt']:
+
+        if trx.get("lastUpdatedAt"):
             trx['lastUpdatedAt'] = mongo_date_to_str(trx['lastUpdatedAt'])
-        else:
-            trx['lastUpdatedAt'] = ''
-        if trx['confirmationTime']:
+
+        if trx.get("confirmationTime"):
             trx['confirmationTime'] = mongo_date_to_str(trx['confirmationTime'])
-        else:
-            trx['confirmationTime'] = ''
 
     dict_values = {
         "transactions": transactions,
