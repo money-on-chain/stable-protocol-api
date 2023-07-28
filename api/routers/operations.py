@@ -43,7 +43,8 @@ async def transactions_list(
         .skip(skip)\
         .limit(limit)\
         .to_list(limit)
-    transactions_count = len(transactions)
+
+    transactions_count = await db["Transaction"].count_documents(query_filter)
 
     for trx in transactions:
         trx['_id'] = str(trx['_id'])
@@ -59,7 +60,7 @@ async def transactions_list(
 
     dict_values = {
         "transactions": transactions,
-        "count": transactions_count,
+        "count": len(transactions),
         "total": transactions_count
     }
 
