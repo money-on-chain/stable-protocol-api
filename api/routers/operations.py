@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Query
 from typing import Annotated
 
-from api.db import db
+from api.db import db, VENDOR_ADDRESS
 from api.models.operations import TokenName, EXCLUDED_EVENTS, mongo_date_to_str, TransactionsList
 
 
@@ -31,7 +31,8 @@ async def transactions_list(
 
     query_filter = {
         "address": {"$regex": address, '$options': 'i'},
-        "event": {"$not": {"$in": EXCLUDED_EVENTS}}
+        "event": {"$not": {"$in": EXCLUDED_EVENTS}},
+        "otherAddress": {"$ne": {"$regex": VENDOR_ADDRESS, '$options': 'i'}}
     }
 
     if token is not None:
