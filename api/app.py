@@ -7,9 +7,10 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from api.routers import operations
 from api.routers import fastbtc
 from api.models.base import InfoApi
+from api.logger import log
 
 
-API_VERSION = '1.0.0'
+API_VERSION = '1.0.1'
 API_TITLE = 'Stable Protocol v0 API'
 API_DESCRIPTION = 'Stable Protocol v0 API'
 
@@ -34,6 +35,8 @@ app.add_middleware(
 
 # Guards against HTTP Host Header attacks
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=getenv("ALLOWED_HOSTS", default=["*"]))
+
+log.info("Starting webservice API version: {0}".format(API_VERSION))
 
 
 @app.get("/infoapi",
