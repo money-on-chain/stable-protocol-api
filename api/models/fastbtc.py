@@ -46,10 +46,14 @@ class FastBtcBridge(BaseModel):
 
 class PegOutList(BaseModel):
     pegout_requests: List[FastBtcBridge]
+    count: int = 0
+    total: int = 0
 
     class Config:
         json_schema_extra = {
             "example": {
                 "pegout_requests": "[]",
+                "count": "0",
+                "total": "0"
             }
         }

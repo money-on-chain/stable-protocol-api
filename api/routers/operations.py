@@ -23,7 +23,7 @@ async def transactions_list(
         limit: Annotated[int, Query(
             title="Limit",
             description="Limit",
-            le=1000)] = 100,
+            le=1000)] = 20,
         skip: Annotated[int, Query(
             title="Skip",
             description="Skip",

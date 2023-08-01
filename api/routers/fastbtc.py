@@ -22,7 +22,7 @@ async def peg_out_list(
         limit: Annotated[int, Query(
             title="Limit",
             description="Limit",
-            le=1000)] = 100,
+            le=1000)] = 20,
         skip: Annotated[int, Query(
             title="Skip",
             description="Skip",
@@ -40,20 +40,21 @@ async def peg_out_list(
         .limit(limit)\
         .to_list(limit)
 
+    transactions_count = await db["FastBtcBridge"].count_documents(query_filter)
+
     for trx in transactions:
         trx['_id'] = str(trx['_id'])
-        if trx['timestamp']:
+
+        if trx.get("timestamp"):
             trx['timestamp'] = mongo_date_to_str(trx['timestamp'])
-        else:
-            trx['timestamp'] = ''
-        if 'updated' in trx:
-            if trx['updated']:
-                trx['updated'] = mongo_date_to_str(trx['updated'])
-            else:
-                trx['updated'] = ''
+
+        if trx.get("updated"):
+            trx['updated'] = mongo_date_to_str(trx['updated'])
 
     dict_values = {
-        "pegout_requests": transactions
+        "pegout_requests": transactions,
+        "count": len(transactions),
+        "total": transactions_count
     }
 
     return dict_values
