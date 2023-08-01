@@ -1,9 +1,9 @@
 # exit as soon as an error happen
 set -e
 
-usage() { echo "Usage: $0 -e <environment> -c <config file> -i <aws id> -r <aws region>" 1>&2; exit 1; }
+usage() { echo "Usage: $0 -e <environment> -i <aws id> -r <aws region>" 1>&2; exit 1; }
 
-while getopts ":e:c:i:r:" o; do
+while getopts ":e:i:r:" o; do
     case "${o}" in
         e)
             e=${OPTARG}
@@ -35,10 +35,6 @@ while getopts ":e:c:i:r:" o; do
                     ;;
             esac
             ;;
-        c)
-            c=${OPTARG}
-            CONFIG_FILE=$c
-            ;;
         i)
             i=${OPTARG}
             AWS_ID=$i
@@ -54,7 +50,7 @@ while getopts ":e:c:i:r:" o; do
 done
 shift $((OPTIND-1))
 
-if [ -z "${e}" ] || [ -z "${c}" ] || [ -z "${i}" ] || [ -z "${r}" ]; then
+if [ -z "${e}" ] || [ -z "${i}" ] || [ -z "${r}" ]; then
     usage
 fi
 
