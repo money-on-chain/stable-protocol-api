@@ -24,17 +24,17 @@ app = FastAPI(
 app.include_router(operations.router)
 app.include_router(fastbtc.router)
 
-# Sets all CORS enabled origins
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[str(origin) for origin in getenv("BACKEND_CORS_ORIGINS", default=["*"])],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Guards against HTTP Host Header attacks
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=getenv("ALLOWED_HOSTS", default=["*"]))
+# # Sets all CORS enabled origins
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=[str(origin) for origin in getenv("BACKEND_CORS_ORIGINS", default=["*"])],
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
+#
+# # Guards against HTTP Host Header attacks
+# app.add_middleware(TrustedHostMiddleware, allowed_hosts=getenv("ALLOWED_HOSTS", default=["*"]))
 
 log.info("Starting webservice API version: {0}".format(API_VERSION))
 
