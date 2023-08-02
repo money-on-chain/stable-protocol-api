@@ -10,7 +10,7 @@ from api.models.base import InfoApi
 from api.logger import log
 
 
-API_VERSION = '1.0.1'
+API_VERSION = '1.0.2'
 API_TITLE = 'Stable Protocol v0 API'
 API_DESCRIPTION = 'Stable Protocol v0 API'
 

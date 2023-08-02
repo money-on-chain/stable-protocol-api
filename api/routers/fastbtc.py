@@ -9,7 +9,7 @@ router = APIRouter()
 
 
 @router.get(
-    "/pegout/",
+    "/api/v1/webapp/fastbtc/pegout/",
     tags=["fastbtc"],
     response_description="Returns the pegout requests from an address",
     response_model=PegOutList
