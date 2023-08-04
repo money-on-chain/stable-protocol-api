@@ -33,8 +33,7 @@ async def transactions_list(
         "address": {"$regex": address, '$options': 'i'},
         "event": {"$not": {"$in": EXCLUDED_EVENTS}},
         "otherAddress": {"$not": {"$in": [
-          {"$regex": VENDOR_ADDRESS, "$options": "i"},
-          {"$regex": COMMISSION_SPLITTER_V2, "$options": "i"}
+          {"$regex": VENDOR_ADDRESS, "$options": "i"}
         ]}},
     }
 
