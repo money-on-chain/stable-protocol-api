@@ -32,9 +32,7 @@ async def transactions_list(
     query_filter = {
         "address": {"$regex": address, '$options': 'i'},
         "event": {"$not": {"$in": EXCLUDED_EVENTS}},
-        "otherAddress": {"$not": {"$in": [
-          {"$regex": VENDOR_ADDRESS, "$options": "i"}
-        ]}},
+        "otherAddress": {"$not": {"$in": [VENDOR_ADDRESS, COMMISSION_SPLITTER_V2]}}
     }
 
     if token is not None:
