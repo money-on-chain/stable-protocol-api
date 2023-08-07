@@ -28,6 +28,18 @@ uvicorn api.app:app --reload
 Go to http://localhost:8000/
 
 
+### Deployed environments
+
+
+| Environment   | Project | URL                                                    | 
+|---------------|---------|--------------------------------------------------------|
+| Testnet Alpha | MOC     | https://api-operations-alpha-testnet.moneyonchain.com/ |
+| Testnet       | MOC     | https://api-operations-testnet.moneyonchain.com/       |
+| Mainnet       | MOC     | https://api-operations.moneyonchain.com/               |
+| Testnet Alpha | ROC     | https://api-operations-alpha-testnet.rifonchain.com/   |
+| Testnet       | ROC     | https://api-operations-testnet.rifonchain.com/         |
+| Mainnet       | ROC     | https://api-operations.rifonchain.com/                 |
+
 ### Docker (Recommended)
 
 Build, change path to correct environment
