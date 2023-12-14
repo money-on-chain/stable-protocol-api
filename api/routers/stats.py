@@ -35,6 +35,12 @@ async def new_accounts_per_day():
                     '$first': '$confirmationTime'
                 }
             }
+        }, {
+            '$match': {
+                'firstSeen': {
+                    '$ne': None
+                }
+            }    
         #}, {
         #    '$match': {
         #        'firstSeen': {
@@ -66,9 +72,8 @@ async def new_accounts_per_day():
     ])
  
     accounts = await cursor.to_list(length=None)
-    filter_fnc = lambda x: x['_id'] is not None
     transform_fnc = lambda x: {'date': x['_id'], 'count': x['count']}   
-    accounts = [transform_fnc(a) for a in filter(filter_fnc, accounts)]
+    accounts = [transform_fnc(a) for a in accounts]
 
     dict_values = {
         "accounts": accounts,
