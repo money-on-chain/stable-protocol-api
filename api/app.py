@@ -6,6 +6,7 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
 from api.routers import operations
 from api.routers import fastbtc
+from api.routers import stats
 from api.models.base import InfoApi
 from api.logger import log
 
@@ -23,6 +24,7 @@ app = FastAPI(
 )
 app.include_router(operations.router)
 app.include_router(fastbtc.router)
+app.include_router(stats.router)
 
 # # Sets all CORS enabled origins
 # app.add_middleware(
