@@ -11,7 +11,7 @@ from api.routers import stats
 from api.models.base import InfoApi
 from api.logger import log
 
-API_VERSION = '1.0.3'
+API_VERSION = '1.0.4'
 API_TITLE = 'Stable Protocol v0 API'
 API_DESCRIPTION = """
 This is a requirement for [stable-protocol-interface](https://github.com/money-on-chain/stable-protocol-interface)
