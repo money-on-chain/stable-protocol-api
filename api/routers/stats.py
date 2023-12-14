@@ -4,12 +4,20 @@ from api.models.stats import AccountsList
 #from datetime import datetime, timezone
 
 
-router = APIRouter()
+
+link_url = 'https://grafana.moneyonchain.com/'
+link_desc = "MOC's Grafana"
+tags_metadata = [{
+    "name": "Stats",
+    "description": f"Used from apps like [{link_desc}]({link_url})"}]
+
+
+
+router = APIRouter(tags=["Stats"])
 
 
 @router.get(
     "/api/v1/stats/new-accounts/",
-    tags=["stats"],
     response_description="Successful Response",
     response_model = AccountsList,
 )

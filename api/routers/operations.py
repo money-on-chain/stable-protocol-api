@@ -10,8 +10,8 @@ router = APIRouter()
 
 @router.get(
     "/api/v1/webapp/transactions/list/",
-    tags=["operations"],
-    response_description="List operations of the given address user",
+    tags=["Webapp"],
+    response_description="Successful Response",
     response_model=TransactionsList
 )
 async def transactions_list(
@@ -28,6 +28,9 @@ async def transactions_list(
             title="Skip",
             description="Skip",
             le=10000)] = 0):
+    """
+    Returns a list of operations of the given address user
+    """
 
     query_filter = {
         "address": {"$regex": address, '$options': 'i'},
