@@ -1,7 +1,6 @@
 from fastapi import APIRouter 
 from api.db import db
 from api.models.stats import AccountsList, Periods
-#from datetime import datetime, timezone
 
 
 
