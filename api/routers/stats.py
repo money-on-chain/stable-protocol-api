@@ -1,6 +1,6 @@
 from fastapi import APIRouter 
 from api.db import db
-from api.models.stats import AccountsList
+from api.models.stats import AccountsList, Periods
 #from datetime import datetime, timezone
 
 
@@ -21,11 +21,47 @@ router = APIRouter(tags=["Stats"])
     response_description="Successful Response",
     response_model = AccountsList,
 )
-async def new_accounts_per_day():
+async def new_accounts(group_by: Periods = Periods.DAY):
     """
-    Returns a list of the amount per day of new accounts
+    Returns a list of the amount _per day_ or _per week_ of new accounts
     that have interacted with the protocol.
     """
+
+    date_filter_per_week = {
+        '$project': {
+            'date': {
+                '$dateToString': {
+                    'format': '%Y-%m-%d', 
+                    'date': {
+                        '$dateFromParts': {
+                            'isoWeekYear': {
+                                '$year': '$firstSeen'
+                            }, 
+                            'isoWeek': {
+                                '$isoWeek': '$firstSeen'
+                            },
+                            "isoDayOfWeek": 7,
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    date_filter_per_day = {
+        '$project': {
+            'date': {
+                '$dateToString': {
+                    'format': '%Y-%m-%d', 
+                    'date': '$firstSeen'
+                }
+            }
+        }
+    }
+
+    date_filter = date_filter_per_day
+    if group_by==Periods.WEEK:
+        date_filter = date_filter_per_week
 
     cursor = db["Transaction"].aggregate([
         {
@@ -41,23 +77,9 @@ async def new_accounts_per_day():
                     '$ne': None
                 }
             }    
-        #}, {
-        #    '$match': {
-        #        'firstSeen': {
-        #            '$gte': datetime(2023, 1, 1, 0, 0, 0, tzinfo=timezone.utc), 
-        #            '$lt': datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
-        #        }
-        #    }
-        }, {
-            '$project': {
-                'date': {
-                    '$dateToString': {
-                        'format': '%Y-%m-%d', 
-                        'date': '$firstSeen'
-                    }
-                }
-            }
-        }, {
+        },
+        date_filter,
+        {
             '$group': {
                 '_id': '$date', 
                 'count': {
@@ -77,6 +99,7 @@ async def new_accounts_per_day():
 
     dict_values = {
         "accounts": accounts,
+        "group_by": group_by.value
     }
 
     return dict_values

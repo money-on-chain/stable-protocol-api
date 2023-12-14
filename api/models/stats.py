@@ -1,10 +1,16 @@
 from datetime import date as date_type
 from pydantic import BaseModel, computed_field
-from typing import List
+from typing import List, Optional
+from enum import Enum
+
+
+class Periods(Enum):
+    DAY = 'day'
+    WEEK = 'week'
 
 
 
-class CountByDay(BaseModel):
+class CountByDate(BaseModel):
     date: date_type
     count: int
 
@@ -18,7 +24,8 @@ class CountByDay(BaseModel):
 
 
 class AccountsList(BaseModel):
-    accounts: List[CountByDay]
+    accounts: List[CountByDate]
+    group_by: Optional[str] = None
 
     @computed_field
     @property
