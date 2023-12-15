@@ -22,8 +22,8 @@ router = APIRouter(tags=["Stats"])
 )
 async def new_accounts(group_by: Periods = Periods.DAY):
     """
-    Returns a list of the amount _per day_ or _per week_ of new accounts
-    that have interacted with the protocol.
+    Returns a list of the amount per _day_, _week_, _month_ or _year_ of new
+    accounts that have interacted with the protocol.
     """
 
     date_filter_per_week = {
@@ -47,6 +47,36 @@ async def new_accounts(group_by: Periods = Periods.DAY):
         }
     }
 
+    date_filter_per_month = {
+        '$project': {
+            'date': {
+                '$dateToString': {
+                    'format': '%Y-%m-%d', 
+                    'date': {
+                        '$subtract': [
+                            {
+                                '$dateFromParts': {
+                                    'year': {
+                                        '$year': '$firstSeen'
+                                    }, 
+                                    'month': {
+                                        '$add': [
+                                            {
+                                                '$month': '$firstSeen'
+                                            },
+                                            1
+                                        ]
+                                    }
+                                }
+                            },
+                            86400000
+                        ]
+                    }
+                }
+            }
+        }
+    }
+
     date_filter_per_day = {
         '$project': {
             'date': {
@@ -58,9 +88,24 @@ async def new_accounts(group_by: Periods = Periods.DAY):
         }
     }
 
+    date_filter_per_year = {
+        '$project': {
+            'date': {
+                '$dateToString': {
+                    'format': '%Y-12-31', 
+                    'date': '$firstSeen'
+                }
+            }
+        }
+    }
+
     date_filter = date_filter_per_day
     if group_by==Periods.WEEK:
         date_filter = date_filter_per_week
+    if group_by==Periods.MONTH:
+        date_filter = date_filter_per_month
+    if group_by==Periods.YEAR:
+        date_filter = date_filter_per_year
 
     cursor = db["Transaction"].aggregate([
         {

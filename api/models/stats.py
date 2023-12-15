@@ -7,6 +7,8 @@ from enum import Enum
 class Periods(Enum):
     DAY = 'day'
     WEEK = 'week'
+    MONTH = 'month'
+    YEAR = 'year'
 
 
 
