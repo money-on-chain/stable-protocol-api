@@ -10,6 +10,9 @@ class Periods(Enum):
     MONTH = 'month'
     YEAR = 'year'
 
+class TransactionsCountType(Enum):
+    ALL = 'all'
+    ONLY_NEW_ACCOUNTS = 'only_new_accounts'
 
 
 class CountByDate(BaseModel):
@@ -25,9 +28,10 @@ class CountByDate(BaseModel):
         }
 
 
-class AccountsList(BaseModel):
+class TransactionsCountList(BaseModel):
     accounts: List[CountByDate]
     group_by: Optional[str] = None
+    type: Optional[str] = None
 
     @computed_field
     @property
@@ -54,8 +58,10 @@ class AccountsList(BaseModel):
             "example": {
                 "accounts": "[]",
                 "since": "1979-08-09",
-                "to": "2009-10-03",
-                "total": 456,
-                "count": 123
+                "to": "2009-01-03",
+                "total": 32220,
+                "count": 10740,
+                "group_by": "day",
+                "type": "all"
             }
         }

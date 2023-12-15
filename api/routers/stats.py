@@ -1,6 +1,6 @@
 from fastapi import APIRouter 
 from api.db import db
-from api.models.stats import AccountsList, Periods
+from api.models.stats import TransactionsCountList, Periods, TransactionsCountType
 
 
 
@@ -16,14 +16,17 @@ router = APIRouter(tags=["Stats"])
 
 
 @router.get(
-    "/api/v1/stats/new-accounts/",
+    "/api/v1/stats/transactions/count",
     response_description="Successful Response",
-    response_model = AccountsList,
+    response_model = TransactionsCountList,
 )
-async def new_accounts(group_by: Periods = Periods.DAY):
+async def transactions_count(
+    type: TransactionsCountType = TransactionsCountType.ONLY_NEW_ACCOUNTS,
+    group_by: Periods = Periods.DAY,
+    ):
     """
-    Returns a list of the amount per _day_, _week_, _month_ or _year_ of new
-    accounts that have interacted with the protocol.
+    Returns a list of the amount (per _day_, _week_, _month_ or _year_) of
+    transactions that the protocol has had.
     """
 
     date_filter_per_week = {
@@ -34,10 +37,10 @@ async def new_accounts(group_by: Periods = Periods.DAY):
                     'date': {
                         '$dateFromParts': {
                             'isoWeekYear': {
-                                '$year': '$firstSeen'
+                                '$year': '$timestamp'
                             }, 
                             'isoWeek': {
-                                '$isoWeek': '$firstSeen'
+                                '$isoWeek': '$timestamp'
                             },
                             "isoDayOfWeek": 7,
                         }
@@ -57,12 +60,12 @@ async def new_accounts(group_by: Periods = Periods.DAY):
                             {
                                 '$dateFromParts': {
                                     'year': {
-                                        '$year': '$firstSeen'
+                                        '$year': '$timestamp'
                                     }, 
                                     'month': {
                                         '$add': [
                                             {
-                                                '$month': '$firstSeen'
+                                                '$month': '$timestamp'
                                             },
                                             1
                                         ]
@@ -82,7 +85,7 @@ async def new_accounts(group_by: Periods = Periods.DAY):
             'date': {
                 '$dateToString': {
                     'format': '%Y-%m-%d', 
-                    'date': '$firstSeen'
+                    'date': '$timestamp'
                 }
             }
         }
@@ -93,7 +96,7 @@ async def new_accounts(group_by: Periods = Periods.DAY):
             'date': {
                 '$dateToString': {
                     'format': '%Y-12-31', 
-                    'date': '$firstSeen'
+                    'date': '$timestamp'
                 }
             }
         }
@@ -107,17 +110,29 @@ async def new_accounts(group_by: Periods = Periods.DAY):
     if group_by==Periods.YEAR:
         date_filter = date_filter_per_year
 
-    cursor = db["Transaction"].aggregate([
-        {
+    start_from_only_new_accounts = {
             '$group': {
                 '_id': '$address', 
-                'firstSeen': {
+                'timestamp': {
                     '$first': '$confirmationTime'
                 }
             }
-        }, {
+        }
+
+    start_from_all = {
+            '$project': {
+                'timestamp': '$confirmationTime'
+            }
+        }
+    
+    start_from = start_from_only_new_accounts
+    if type==TransactionsCountType.ALL:
+        start_from = start_from_all
+
+    cursor = db["Transaction"].aggregate([
+        start_from, {
             '$match': {
-                'firstSeen': {
+                'timestamp': {
                     '$ne': None
                 }
             }    
@@ -143,7 +158,8 @@ async def new_accounts(group_by: Periods = Periods.DAY):
 
     dict_values = {
         "accounts": accounts,
-        "group_by": group_by.value
+        "group_by": group_by.value,
+        "type": type.value
     }
 
     return dict_values
