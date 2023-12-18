@@ -10,8 +10,8 @@ router = APIRouter()
 
 @router.get(
     "/api/v1/webapp/fastbtc/pegout/",
-    tags=["fastbtc"],
-    response_description="Returns the pegout requests from an address",
+    tags=["Webapp"],
+    response_description="Successful Response",
     response_model=PegOutList
 )
 async def peg_out_list(
@@ -27,6 +27,9 @@ async def peg_out_list(
             title="Skip",
             description="Skip",
             le=10000)] = 0):
+    """
+    Returns the pegout requests from an address
+    """
 
     query_filter = {
         "rskAddress": {"$regex": address, '$options': 'i'},

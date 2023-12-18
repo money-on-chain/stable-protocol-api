@@ -15,7 +15,7 @@ Requirements:
 pip install -r requirements.txt
 
 # Configure the location of your MongoDB database:
-copy .example.env .env
+cp .example.env .env
 
 # Edit .env file and change settings point Mongo DB uris 
 
