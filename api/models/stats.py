@@ -14,6 +14,18 @@ class TransactionsCountType(Enum):
     ALL = 'all'
     ONLY_NEW_ACCOUNTS = 'only_new_accounts'
 
+class TransactionsCountFilter(Enum):
+    ALL = 'all'
+    ONLY_TRANSFER = 'only_transfer'
+    ONLY_MINT = 'only_mint'
+    ONLY_REDEEM = 'only_redeem'
+    ONLY_MINT_AN_REDEEM = 'only_mint_and_redeem'
+
+class TransactionsCountToken(Enum):
+    ALL = 'all'
+    ONLY_STABLE = 'only_stable'
+    ONLY_PRO = 'only_pro'
+    ONLY_GOVERNANCE = 'only_governance'
 
 class CountByDate(BaseModel):
     date: date_type
@@ -35,17 +47,23 @@ class TransactionsCountList(BaseModel):
 
     @computed_field
     @property
-    def since(self) -> date_type:       
+    def since(self) -> date_type:
+        if not self.accounts:
+            return None       
         return self.accounts[0].date
 
     @computed_field
     @property
     def to(self) -> date_type:
+        if not self.accounts:
+            return None
         return self.accounts[-1].date
 
     @computed_field
     @property
     def total(self) -> int:
+        if not self.accounts:
+            return 0
         return sum([a.count for a in self.accounts])
 
     @computed_field

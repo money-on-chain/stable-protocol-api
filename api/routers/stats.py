@@ -1,6 +1,8 @@
 from fastapi import APIRouter 
 from api.db import db
-from api.models.stats import TransactionsCountList, Periods, TransactionsCountType
+from api.models.stats import (TransactionsCountList, Periods,
+                              TransactionsCountType, TransactionsCountToken,
+                              TransactionsCountFilter)
 
 
 
@@ -22,6 +24,8 @@ router = APIRouter(tags=["Stats"])
 )
 async def transactions_count(
     type: TransactionsCountType = TransactionsCountType.ONLY_NEW_ACCOUNTS,
+    token: TransactionsCountToken = TransactionsCountToken.ALL,
+    filter: TransactionsCountFilter = TransactionsCountFilter.ALL,
     group_by: Periods = Periods.DAY,
     ):
     """
@@ -29,128 +33,180 @@ async def transactions_count(
     transactions that the protocol has had.
     """
 
-    date_filter_per_week = {
-        '$project': {
-            'date': {
-                '$dateToString': {
-                    'format': '%Y-%m-%d', 
-                    'date': {
-                        '$dateFromParts': {
-                            'isoWeekYear': {
-                                '$year': '$timestamp'
-                            }, 
-                            'isoWeek': {
-                                '$isoWeek': '$timestamp'
-                            },
-                            "isoDayOfWeek": 7,
-                        }
-                    }
-                }
+    query = []
+
+    if token==TransactionsCountToken.ONLY_STABLE:
+        query.append({
+            '$match': {
+                'tokenInvolved': 'STABLE'
+            }    
+        })
+    elif token==TransactionsCountToken.ONLY_PRO:
+        query.append({
+            '$match': {
+                'tokenInvolved': 'RISKPRO'
+            }    
+        })
+    elif token==TransactionsCountToken.ONLY_GOVERNANCE:
+        query.append({
+            '$match': {
+                'tokenInvolved': 'MOC'
+            }    
+        })
+
+    if filter==TransactionsCountFilter.ONLY_TRANSFER:
+        query.append({
+            '$match': {
+                'event': 'Transfer'
+            }    
+        })
+    elif filter==TransactionsCountFilter.ONLY_MINT:
+        query.append({
+            '$match': {
+                '$or': [
+                    {'event' : "RiskProMint"},
+                    {'event' : "StableTokenMint"}
+                ]
+            }    
+        })
+    elif filter==TransactionsCountFilter.ONLY_REDEEM:
+        query.append({
+            '$match': {
+                '$or': [
+                    {'event' : "RiskProRedeem"},
+                    {'event' : "FreeStableTokenRedeem"}
+                ]
+            }    
+        })
+    elif filter==TransactionsCountFilter.ONLY_MINT_AN_REDEEM:
+        query.append({
+            '$match': {
+                '$or': [
+                    {'event' : "RiskProMint"},
+                    {'event' : "StableTokenMint"},
+                    {'event' : "RiskProRedeem"},
+                    {'event' : "FreeStableTokenRedeem"}
+                ]
+            }    
+        })
+
+    if type==TransactionsCountType.ALL: # start from all
+        query.append({
+            '$project': {
+                'timestamp': '$confirmationTime'
             }
-        }
-    }
-
-    date_filter_per_month = {
-        '$project': {
-            'date': {
-                '$dateToString': {
-                    'format': '%Y-%m-%d', 
-                    'date': {
-                        '$subtract': [
-                            {
-                                '$dateFromParts': {
-                                    'year': {
-                                        '$year': '$timestamp'
-                                    }, 
-                                    'month': {
-                                        '$add': [
-                                            {
-                                                '$month': '$timestamp'
-                                            },
-                                            1
-                                        ]
-                                    }
-                                }
-                            },
-                            86400000
-                        ]
-                    }
-                }
-            }
-        }
-    }
-
-    date_filter_per_day = {
-        '$project': {
-            'date': {
-                '$dateToString': {
-                    'format': '%Y-%m-%d', 
-                    'date': '$timestamp'
-                }
-            }
-        }
-    }
-
-    date_filter_per_year = {
-        '$project': {
-            'date': {
-                '$dateToString': {
-                    'format': '%Y-12-31', 
-                    'date': '$timestamp'
-                }
-            }
-        }
-    }
-
-    date_filter = date_filter_per_day
-    if group_by==Periods.WEEK:
-        date_filter = date_filter_per_week
-    if group_by==Periods.MONTH:
-        date_filter = date_filter_per_month
-    if group_by==Periods.YEAR:
-        date_filter = date_filter_per_year
-
-    start_from_only_new_accounts = {
+        })
+    else: # start from only new accounts
+        query.append({
             '$group': {
                 '_id': '$address', 
                 'timestamp': {
                     '$first': '$confirmationTime'
                 }
             }
-        }
-
-    start_from_all = {
-            '$project': {
-                'timestamp': '$confirmationTime'
-            }
-        }
+        })
     
-    start_from = start_from_only_new_accounts
-    if type==TransactionsCountType.ALL:
-        start_from = start_from_all
+    query.append({
+        '$match': {
+            'timestamp': {
+                '$ne': None
+            }
+        }    
+    })
 
-    cursor = db["Transaction"].aggregate([
-        start_from, {
-            '$match': {
-                'timestamp': {
-                    '$ne': None
-                }
-            }    
-        },
-        date_filter,
-        {
-            '$group': {
-                '_id': '$date', 
-                'count': {
-                    '$sum': 1
+    if group_by==Periods.WEEK:
+        query.append({
+            '$project': {
+                'date': {
+                    '$dateToString': {
+                        'format': '%Y-%m-%d', 
+                        'date': {
+                            '$dateFromParts': {
+                                'isoWeekYear': {
+                                    '$year': '$timestamp'
+                                }, 
+                                'isoWeek': {
+                                    '$isoWeek': '$timestamp'
+                                },
+                                "isoDayOfWeek": 7,
+                            }
+                        }
+                    }
                 }
             }
-        }, {
-            '$sort': {
-                '_id': 1
+        })
+    
+    elif group_by==Periods.MONTH:
+        query.append({
+            '$project': {
+                'date': {
+                    '$dateToString': {
+                        'format': '%Y-%m-%d', 
+                        'date': {
+                            '$subtract': [
+                                {
+                                    '$dateFromParts': {
+                                        'year': {
+                                            '$year': '$timestamp'
+                                        }, 
+                                        'month': {
+                                            '$add': [
+                                                {
+                                                    '$month': '$timestamp'
+                                                },
+                                                1
+                                            ]
+                                        }
+                                    }
+                                },
+                                86400000
+                            ]
+                        }
+                    }
+                }
+            }
+        })
+    
+    elif group_by==Periods.YEAR:
+        query.append({
+            '$project': {
+                'date': {
+                    '$dateToString': {
+                        'format': '%Y-12-31', 
+                        'date': '$timestamp'
+                    }
+                }
+            }
+        })
+    
+    else: # group per day
+        query.append({
+            '$project': {
+                'date': {
+                    '$dateToString': {
+                        'format': '%Y-%m-%d', 
+                        'date': '$timestamp'
+                    }
+                }
+            }
+        })
+    
+    query.append({
+        '$group': {
+            '_id': '$date', 
+            'count': {
+                '$sum': 1
             }
         }
-    ])
+    })
+    
+    query.append({
+        '$sort': {
+            '_id': 1
+        }
+    })
+    
+    cursor = db["Transaction"].aggregate(query)
  
     accounts = await cursor.to_list(length=None)
     transform_fnc = lambda x: {'date': x['_id'], 'count': x['count']}   
