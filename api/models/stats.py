@@ -14,6 +14,10 @@ class TransactionsCountType(Enum):
     ALL = 'all'
     ONLY_NEW_ACCOUNTS = 'only_new_accounts'
 
+class TransactionsCountFnc(str, Enum):
+    COUNT = 'count'
+    SUM = 'sum'
+
 class TransactionsCountFilter(Enum):
     ALL = 'all'
     ONLY_TRANSFER = 'only_transfer'
@@ -29,13 +33,13 @@ class TransactionsCountToken(Enum):
 
 class CountByDate(BaseModel):
     date: date_type
-    count: int
+    count: float
 
     class Config:
         json_schema_extra = {
             "example": {
                 "date": "1979-08-09",
-                "count": 46
+                "count": 460.0
             }
         }
 
@@ -61,15 +65,15 @@ class TransactionsCountList(BaseModel):
 
     @computed_field
     @property
-    def total(self) -> int:
+    def total(self) -> float:
         if not self.accounts:
-            return 0
-        return sum([a.count for a in self.accounts])
+            return 0.0
+        return float(sum([a.count for a in self.accounts]))
 
     @computed_field
     @property
-    def count(self) -> int:
-        return len(self.accounts)
+    def count(self) -> float:
+        return float(len(self.accounts))
 
     class Config:
         json_schema_extra = {
