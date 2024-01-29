@@ -18,7 +18,7 @@ class TransactionsCountFnc(str, Enum):
     COUNT = 'count'
     SUM = 'sum'
 
-class TransactionsCountFilter(Enum):
+class TransactionsCountEvent(Enum):
     ALL = 'all'
     ONLY_TRANSFER = 'only_transfer'
     ONLY_MINT = 'only_mint'

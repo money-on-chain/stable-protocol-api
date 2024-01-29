@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from api.db import db
 from api.models.stats import (TransactionsCountList, Periods,
                               TransactionsCountType, TransactionsCountToken,
-                              TransactionsCountFilter, TransactionsCountFnc)
+                              TransactionsCountEvent, TransactionsCountFnc)
 
 
 
@@ -20,7 +20,7 @@ router = APIRouter(tags=["Stats"])
 async def transactions_base(
     type: TransactionsCountType = TransactionsCountType.ONLY_NEW_ACCOUNTS,
     token: TransactionsCountToken = TransactionsCountToken.ALL,
-    filter: TransactionsCountFilter = TransactionsCountFilter.ALL,
+    event: TransactionsCountEvent = TransactionsCountEvent.ALL,
     group_by: Periods = Periods.DAY,
     fnc: TransactionsCountFnc = TransactionsCountFnc.COUNT
     ):
@@ -37,9 +37,9 @@ async def transactions_base(
                     "does not make sense, it is mixing pears with apples."))
 
     if (token==TransactionsCountToken.ONLY_GOVERNANCE and
-        filter in [TransactionsCountFilter.ONLY_MINT,
-                   TransactionsCountFilter.ONLY_REDEEM,
-                   TransactionsCountFilter.ONLY_MINT_AN_REDEEM]):
+        event in [TransactionsCountEvent.ONLY_MINT,
+                   TransactionsCountEvent.ONLY_REDEEM,
+                   TransactionsCountEvent.ONLY_MINT_AN_REDEEM]):
         raise HTTPException(status_code=404,
             detail=("governance token cannot be redeemed or minted."))   
 
@@ -64,13 +64,13 @@ async def transactions_base(
             }    
         })
 
-    if filter==TransactionsCountFilter.ONLY_TRANSFER:
+    if event==TransactionsCountEvent.ONLY_TRANSFER:
         query.append({
             '$match': {
                 'event': 'Transfer'
             }    
         })
-    elif filter==TransactionsCountFilter.ONLY_MINT:
+    elif event==TransactionsCountEvent.ONLY_MINT:
         query.append({
             '$match': {
                 '$or': [
@@ -79,7 +79,7 @@ async def transactions_base(
                 ]
             }    
         })
-    elif filter==TransactionsCountFilter.ONLY_REDEEM:
+    elif event==TransactionsCountEvent.ONLY_REDEEM:
         query.append({
             '$match': {
                 '$or': [
@@ -88,7 +88,7 @@ async def transactions_base(
                 ]
             }    
         })
-    elif filter==TransactionsCountFilter.ONLY_MINT_AN_REDEEM:
+    elif event==TransactionsCountEvent.ONLY_MINT_AN_REDEEM:
         query.append({
             '$match': {
                 '$or': [
@@ -276,7 +276,7 @@ async def transactions_base(
             }
         }})
 async def volumen_stable_token(
-    filter: TransactionsCountFilter = TransactionsCountFilter.ALL,
+    event: TransactionsCountEvent = TransactionsCountEvent.ALL,
     group_by: Periods = Periods.DAY,
     ):
     """
@@ -286,7 +286,7 @@ async def volumen_stable_token(
     return await transactions_base(
         type = TransactionsCountType.ALL,
         token = TransactionsCountToken.ONLY_STABLE,
-        filter = filter,
+        event = event,
         group_by = group_by,
         fnc = TransactionsCountFnc.SUM
     )
@@ -314,7 +314,7 @@ async def volumen_stable_token(
             }
         }})
 async def volumen_pro_token(
-    filter: TransactionsCountFilter = TransactionsCountFilter.ALL,
+    event: TransactionsCountEvent = TransactionsCountEvent.ALL,
     group_by: Periods = Periods.DAY,
     ):
     """
@@ -324,7 +324,7 @@ async def volumen_pro_token(
     return await transactions_base(
         type = TransactionsCountType.ALL,
         token = TransactionsCountToken.ONLY_PRO,
-        filter = filter,
+        event = event,
         group_by = group_by,
         fnc = TransactionsCountFnc.SUM
     )
@@ -352,7 +352,7 @@ async def volumen_pro_token(
             }
         }})
 async def volumen_governance_token(
-    filter: TransactionsCountFilter = TransactionsCountFilter.ALL,
+    event: TransactionsCountEvent = TransactionsCountEvent.ALL,
     group_by: Periods = Periods.DAY,
     ):
     """
@@ -362,7 +362,7 @@ async def volumen_governance_token(
     return await transactions_base(
         type = TransactionsCountType.ALL,
         token = TransactionsCountToken.ONLY_GOVERNANCE,
-        filter = filter,
+        event = event,
         group_by = group_by,
         fnc = TransactionsCountFnc.SUM
     )
@@ -392,7 +392,7 @@ async def volumen_governance_token(
 async def transactions_count(
     type: TransactionsCountType = TransactionsCountType.ONLY_NEW_ACCOUNTS,
     token: TransactionsCountToken = TransactionsCountToken.ALL,
-    filter: TransactionsCountFilter = TransactionsCountFilter.ALL,
+    event: TransactionsCountEvent = TransactionsCountEvent.ALL,
     group_by: Periods = Periods.DAY,
     fnc: TransactionsCountFnc = TransactionsCountFnc.COUNT
     ):
@@ -405,7 +405,7 @@ async def transactions_count(
     return await transactions_base(
         type = type,
         token = token,
-        filter = filter,
+        event = event,
         group_by = group_by,
         fnc = fnc
     )
