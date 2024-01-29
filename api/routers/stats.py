@@ -17,38 +17,13 @@ tags_metadata = [{
 router = APIRouter(tags=["Stats"])
 
 
-@router.get(
-    "/api/v1/stats/transactions/{fnc}",
-    response_description="Successful Response",
-    response_model = TransactionsCountList,
-    responses = {
-        400:{
-            "description": "Bad Request",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Bad Request"}
-                }
-            }
-        },
-        404:{
-            "description": "Not found",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Not Found"}
-                }
-            }
-        }})
-async def transactions_count(
+async def transactions_base(
     type: TransactionsCountType = TransactionsCountType.ONLY_NEW_ACCOUNTS,
     token: TransactionsCountToken = TransactionsCountToken.ALL,
     filter: TransactionsCountFilter = TransactionsCountFilter.ALL,
     group_by: Periods = Periods.DAY,
     fnc: TransactionsCountFnc = TransactionsCountFnc.COUNT
     ):
-    """
-    Returns a list of the amount (per _day_, _week_, _month_ or _year_) of
-    transactions that the protocol has had.
-    """
 
     if type==TransactionsCountType.ONLY_NEW_ACCOUNTS \
             and fnc==TransactionsCountFnc.SUM:
@@ -277,3 +252,160 @@ async def transactions_count(
     }
 
     return dict_values
+
+
+@router.get(
+    "/api/v1/stats/volumen/stable",
+    response_description="Successful Response",
+    response_model = TransactionsCountList,
+    responses = {
+        400:{
+            "description": "Bad Request",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Bad Request"}
+                }
+            }
+        },
+        404:{
+            "description": "Not found",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Not Found"}
+                }
+            }
+        }})
+async def volumen_stable_token(
+    filter: TransactionsCountFilter = TransactionsCountFilter.ALL,
+    group_by: Periods = Periods.DAY,
+    ):
+    """
+    Returns a list of the volumen of (per _day_, _week_, _month_ or _year_) of
+    the **Stable** token.
+    """
+    return await transactions_base(
+        type = TransactionsCountType.ALL,
+        token = TransactionsCountToken.ONLY_STABLE,
+        filter = filter,
+        group_by = group_by,
+        fnc = TransactionsCountFnc.SUM
+    )
+
+
+@router.get(
+    "/api/v1/stats/volumen/pro",
+    response_description="Successful Response",
+    response_model = TransactionsCountList,
+    responses = {
+        400:{
+            "description": "Bad Request",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Bad Request"}
+                }
+            }
+        },
+        404:{
+            "description": "Not found",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Not Found"}
+                }
+            }
+        }})
+async def volumen_pro_token(
+    filter: TransactionsCountFilter = TransactionsCountFilter.ALL,
+    group_by: Periods = Periods.DAY,
+    ):
+    """
+    Returns a list of the volumen of (per _day_, _week_, _month_ or _year_) of
+    the **Pro** token.
+    """
+    return await transactions_base(
+        type = TransactionsCountType.ALL,
+        token = TransactionsCountToken.ONLY_PRO,
+        filter = filter,
+        group_by = group_by,
+        fnc = TransactionsCountFnc.SUM
+    )
+
+
+@router.get(
+    "/api/v1/stats/volumen/governance",
+    response_description="Successful Response",
+    response_model = TransactionsCountList,
+    responses = {
+        400:{
+            "description": "Bad Request",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Bad Request"}
+                }
+            }
+        },
+        404:{
+            "description": "Not found",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Not Found"}
+                }
+            }
+        }})
+async def volumen_governance_token(
+    filter: TransactionsCountFilter = TransactionsCountFilter.ALL,
+    group_by: Periods = Periods.DAY,
+    ):
+    """
+    Returns a list of the volumen of (per _day_, _week_, _month_ or _year_) of
+    the **Governance** token.
+    """
+    return await transactions_base(
+        type = TransactionsCountType.ALL,
+        token = TransactionsCountToken.ONLY_GOVERNANCE,
+        filter = filter,
+        group_by = group_by,
+        fnc = TransactionsCountFnc.SUM
+    )
+
+
+@router.get(
+    "/api/v1/stats/transactions/{fnc}",
+    response_description="Successful Response",
+    response_model = TransactionsCountList,
+    responses = {
+        400:{
+            "description": "Bad Request",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Bad Request"}
+                }
+            }
+        },
+        404:{
+            "description": "Not found",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Not Found"}
+                }
+            }
+        }})
+async def transactions_count(
+    type: TransactionsCountType = TransactionsCountType.ONLY_NEW_ACCOUNTS,
+    token: TransactionsCountToken = TransactionsCountToken.ALL,
+    filter: TransactionsCountFilter = TransactionsCountFilter.ALL,
+    group_by: Periods = Periods.DAY,
+    fnc: TransactionsCountFnc = TransactionsCountFnc.COUNT
+    ):
+    """
+    Returns a list of the amount (per _day_, _week_, _month_ or _year_) of
+    transactions that the protocol has had.
+
+    *On this one are based the previous endpoints.*
+    """
+    return await transactions_base(
+        type = type,
+        token = token,
+        filter = filter,
+        group_by = group_by,
+        fnc = fnc
+    )
