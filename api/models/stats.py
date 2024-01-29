@@ -78,7 +78,7 @@ class TransactionsCountList(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
-                "accounts": "[]",
+                "accounts": [],
                 "since": "1979-08-09",
                 "to": "2009-01-03",
                 "total": 32220,
