@@ -18,7 +18,7 @@ class TransactionsCountFnc(str, Enum):
     COUNT = 'count'
     SUM = 'sum'
 
-class TransactionsCountFilter(Enum):
+class TransactionsCountEvent(Enum):
     ALL = 'all'
     ONLY_TRANSFER = 'only_transfer'
     ONLY_MINT = 'only_mint'
@@ -78,7 +78,7 @@ class TransactionsCountList(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
-                "accounts": "[]",
+                "accounts": [],
                 "since": "1979-08-09",
                 "to": "2009-01-03",
                 "total": 32220,
