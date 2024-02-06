@@ -12,6 +12,10 @@ from api.models.base import InfoApi
 from api.logger import log
 from api.db import connect_and_init_db, close_db_connect
 
+from pymongo.errors import ServerSelectionTimeoutError as MongoTimeout
+from fastapi import Request
+from fastapi.responses import JSONResponse
+
 
 API_VERSION = '1.0.7'
 API_TITLE = 'Stable Protocol v0 API'
@@ -46,6 +50,14 @@ app.add_event_handler("shutdown", close_db_connect)
 app.include_router(operations.router)
 app.include_router(fastbtc.router)
 app.include_router(stats.router)
+
+@app.exception_handler(MongoTimeout)
+async def db_error_exception_handler(request: Request,
+                                     exc: MongoTimeout):
+    return JSONResponse(
+        status_code=503,
+        content={"detail": "Cannot get DB access"},
+    )    
 
 # # Sets all CORS enabled origins
 # app.add_middleware(
