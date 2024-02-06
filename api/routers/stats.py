@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from api.db import get_db
+from .common import make_responses
 from api.models.stats import (TransactionsCountList, Periods,
                               TransactionsCountType, TransactionsCountToken,
                               TransactionsCountEvent, TransactionsCountFnc)
@@ -27,7 +28,7 @@ async def transactions_base(
     db = await get_db()
 
     if db is None:
-        raise HTTPException(status_code=400, detail="Cannot get DB")
+        raise HTTPException(status_code=503, detail="Cannot get DB access")
 
     if type==TransactionsCountType.ONLY_NEW_ACCOUNTS \
             and fnc==TransactionsCountFnc.SUM:
@@ -262,23 +263,7 @@ async def transactions_base(
     "/api/v1/stats/volumen/stable",
     response_description="Successful Response",
     response_model = TransactionsCountList,
-    responses = {
-        400:{
-            "description": "Bad Request",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Bad Request"}
-                }
-            }
-        },
-        404:{
-            "description": "Not found",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Not Found"}
-                }
-            }
-        }})
+    responses = make_responses(503, 400, 404))
 async def volumen_stable_token(
     event: TransactionsCountEvent = TransactionsCountEvent.ALL,
     group_by: Periods = Periods.DAY,
@@ -300,23 +285,7 @@ async def volumen_stable_token(
     "/api/v1/stats/volumen/pro",
     response_description="Successful Response",
     response_model = TransactionsCountList,
-    responses = {
-        400:{
-            "description": "Bad Request",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Bad Request"}
-                }
-            }
-        },
-        404:{
-            "description": "Not found",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Not Found"}
-                }
-            }
-        }})
+    responses = make_responses(503, 400, 404))
 async def volumen_pro_token(
     event: TransactionsCountEvent = TransactionsCountEvent.ALL,
     group_by: Periods = Periods.DAY,
@@ -338,23 +307,7 @@ async def volumen_pro_token(
     "/api/v1/stats/volumen/governance",
     response_description="Successful Response",
     response_model = TransactionsCountList,
-    responses = {
-        400:{
-            "description": "Bad Request",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Bad Request"}
-                }
-            }
-        },
-        404:{
-            "description": "Not found",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Not Found"}
-                }
-            }
-        }})
+    responses = make_responses(503, 400, 404))
 async def volumen_governance_token(
     event: TransactionsCountEvent = TransactionsCountEvent.ALL,
     group_by: Periods = Periods.DAY,
@@ -376,23 +329,7 @@ async def volumen_governance_token(
     "/api/v1/stats/transactions/{fnc}",
     response_description="Successful Response",
     response_model = TransactionsCountList,
-    responses = {
-        400:{
-            "description": "Bad Request",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Bad Request"}
-                }
-            }
-        },
-        404:{
-            "description": "Not found",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Not Found"}
-                }
-            }
-        }})
+    responses = make_responses(503, 400, 404))
 async def transactions_count(
     type: TransactionsCountType = TransactionsCountType.ONLY_NEW_ACCOUNTS,
     token: TransactionsCountToken = TransactionsCountToken.ALL,
