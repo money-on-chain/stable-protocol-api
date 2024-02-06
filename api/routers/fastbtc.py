@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, HTTPException
 from typing import Annotated
 
-from api.db import db
+from api.db import get_db
 from api.models.fastbtc import mongo_date_to_str, PegOutList
 
 
@@ -30,6 +30,12 @@ async def peg_out_list(
     """
     Returns the pegout requests from an address
     """
+
+    # get mongo db connection
+    db = await get_db()
+
+    if db is None:
+        raise HTTPException(status_code=400, detail="Cannot get DB")
 
     query_filter = {
         "rskAddress": {"$regex": address, '$options': 'i'},

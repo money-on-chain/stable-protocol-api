@@ -10,8 +10,10 @@ from api.routers import stats
 
 from api.models.base import InfoApi
 from api.logger import log
+from api.db import connect_and_init_db, close_db_connect
 
-API_VERSION = '1.0.6'
+
+API_VERSION = '1.0.7'
 API_TITLE = 'Stable Protocol v0 API'
 API_DESCRIPTION = """
 This is a requirement for [stable-protocol-interface](https://github.com/money-on-chain/stable-protocol-interface)
@@ -35,8 +37,11 @@ app = FastAPI(
     description=API_DESCRIPTION,
     openapi_url="/openapi.json",
     docs_url="/",
-    openapi_tags = tags_metadata
+    openapi_tags=tags_metadata
 )
+
+app.add_event_handler("startup", connect_and_init_db)
+app.add_event_handler("shutdown", close_db_connect)
 
 app.include_router(operations.router)
 app.include_router(fastbtc.router)
@@ -53,6 +58,24 @@ app.include_router(stats.router)
 #
 # # Guards against HTTP Host Header attacks
 # app.add_middleware(TrustedHostMiddleware, allowed_hosts=getenv("ALLOWED_HOSTS", default=["*"]))
+
+BACKEND_CORS_ORIGINS = getenv("BACKEND_CORS_ORIGINS", default=False)
+ALLOWED_HOSTS = getenv("ALLOWED_HOSTS", default=False)
+
+if BACKEND_CORS_ORIGINS:
+    # Sets all CORS enabled origins
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[str(origin) for origin in BACKEND_CORS_ORIGINS],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+if ALLOWED_HOSTS:
+    # Guards against HTTP Host Header attacks
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
+
 
 log.info("Starting webservice API version: {0}".format(API_VERSION))
 
