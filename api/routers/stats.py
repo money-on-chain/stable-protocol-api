@@ -1,9 +1,8 @@
 from fastapi import APIRouter, HTTPException
-from api.db import db
+from api.db import get_db
 from api.models.stats import (TransactionsCountList, Periods,
                               TransactionsCountType, TransactionsCountToken,
                               TransactionsCountEvent, TransactionsCountFnc)
-
 
 
 link_url = 'https://grafana.moneyonchain.com/'
@@ -11,7 +10,6 @@ link_desc = "MOC's Grafana"
 tags_metadata = [{
     "name": "Stats",
     "description": f"Used from apps like [{link_desc}]({link_url})"}]
-
 
 
 router = APIRouter(tags=["Stats"])
@@ -24,6 +22,12 @@ async def transactions_base(
     group_by: Periods = Periods.DAY,
     fnc: TransactionsCountFnc = TransactionsCountFnc.COUNT
     ):
+
+    # get mongo db connection
+    db = await get_db()
+
+    if db is None:
+        raise HTTPException(status_code=400, detail="Cannot get DB")
 
     if type==TransactionsCountType.ONLY_NEW_ACCOUNTS \
             and fnc==TransactionsCountFnc.SUM:

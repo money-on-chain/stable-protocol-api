@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, HTTPException
 from typing import Annotated
 
-from api.db import db, VENDOR_ADDRESS, COMMISSION_SPLITTER_V2
+from api.db import get_db, VENDOR_ADDRESS, COMMISSION_SPLITTER_V2
 from api.models.operations import TokenName, EXCLUDED_EVENTS, mongo_date_to_str, TransactionsList
 
 
@@ -31,6 +31,12 @@ async def transactions_list(
     """
     Returns a list of operations of the given address user
     """
+
+    # get mongo db connection
+    db = await get_db()
+
+    if db is None:
+        raise HTTPException(status_code=400, detail="Cannot get DB")
 
     query_filter = {
         "address": {"$regex": address, '$options': 'i'},
