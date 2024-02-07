@@ -4,6 +4,8 @@ from typing import Annotated
 from api.db import get_db, VENDOR_ADDRESS, COMMISSION_SPLITTER_V2
 from api.models.operations import TokenName, EXCLUDED_EVENTS, mongo_date_to_str, TransactionsList
 
+from .common import make_responses
+
 
 router = APIRouter()
 
@@ -12,7 +14,8 @@ router = APIRouter()
     "/api/v1/webapp/transactions/list/",
     tags=["Webapp"],
     response_description="Successful Response",
-    response_model=TransactionsList
+    response_model=TransactionsList,
+    responses = make_responses(503)
 )
 async def transactions_list(
         address: Annotated[str, Query(
@@ -36,7 +39,7 @@ async def transactions_list(
     db = await get_db()
 
     if db is None:
-        raise HTTPException(status_code=400, detail="Cannot get DB")
+        raise HTTPException(status_code=503, detail="Cannot get DB access")
 
     query_filter = {
         "address": {"$regex": address, '$options': 'i'},

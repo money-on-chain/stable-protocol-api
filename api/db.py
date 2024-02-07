@@ -24,7 +24,8 @@ async def connect_and_init_db():
     global db_client
     try:
         db_client = AsyncIOMotorClient(getenv("APP_MONGO_URI", default="mongodb://localhost:27017"))
-        log.info('Connected to mongo.')
+        server_info = await db_client.server_info()
+        log.info(f"Connected to mongo! (version {server_info['version']}).")
     except Exception as e:
         log.exception(f'Could not connect to mongo: {e}')
         raise

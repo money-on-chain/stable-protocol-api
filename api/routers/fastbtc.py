@@ -4,6 +4,8 @@ from typing import Annotated
 from api.db import get_db
 from api.models.fastbtc import mongo_date_to_str, PegOutList
 
+from .common import make_responses
+
 
 router = APIRouter()
 
@@ -12,7 +14,8 @@ router = APIRouter()
     "/api/v1/webapp/fastbtc/pegout/",
     tags=["Webapp"],
     response_description="Successful Response",
-    response_model=PegOutList
+    response_model=PegOutList,
+    responses = make_responses(503)
 )
 async def peg_out_list(
         address: Annotated[str, Query(
@@ -35,7 +38,7 @@ async def peg_out_list(
     db = await get_db()
 
     if db is None:
-        raise HTTPException(status_code=400, detail="Cannot get DB")
+        raise HTTPException(status_code=503, detail="Cannot get DB access")
 
     query_filter = {
         "rskAddress": {"$regex": address, '$options': 'i'},
