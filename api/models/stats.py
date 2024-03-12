@@ -23,7 +23,7 @@ class TransactionsCountEvent(Enum):
     ONLY_TRANSFER = 'only_transfer'
     ONLY_MINT = 'only_mint'
     ONLY_REDEEM = 'only_redeem'
-    ONLY_MINT_AN_REDEEM = 'only_mint_and_redeem'
+    ONLY_MINT_AND_REDEEM = 'only_mint_and_redeem'
 
 class TransactionsCountToken(Enum):
     ALL = 'all'

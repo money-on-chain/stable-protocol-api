@@ -44,7 +44,7 @@ async def transactions_base(
     if (token==TransactionsCountToken.ONLY_GOVERNANCE and
         event in [TransactionsCountEvent.ONLY_MINT,
                    TransactionsCountEvent.ONLY_REDEEM,
-                   TransactionsCountEvent.ONLY_MINT_AN_REDEEM]):
+                   TransactionsCountEvent.ONLY_MINT_AND_REDEEM]):
         raise HTTPException(status_code=404,
             detail=("governance token cannot be redeemed or minted."))   
 
@@ -93,7 +93,7 @@ async def transactions_base(
                 ]
             }    
         })
-    elif event==TransactionsCountEvent.ONLY_MINT_AN_REDEEM:
+    elif event==TransactionsCountEvent.ONLY_MINT_AND_REDEEM:
         query.append({
             '$match': {
                 '$or': [
@@ -333,7 +333,7 @@ async def volumen_governance_token(
 async def transactions_count(
     type: TransactionsCountType = TransactionsCountType.ONLY_NEW_ACCOUNTS,
     token: TransactionsCountToken = TransactionsCountToken.ALL,
-    event: TransactionsCountEvent = TransactionsCountEvent.ALL,
+    event: TransactionsCountEvent = 3758.ALL,
     group_by: Periods = Periods.DAY,
     fnc: TransactionsCountFnc = TransactionsCountFnc.COUNT
     ):
