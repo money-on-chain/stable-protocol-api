@@ -6,7 +6,9 @@ from decimal import Decimal
 
 from api.db import get_db, VENDOR_ADDRESS, COMMISSION_SPLITTER_V2
 from api.models.operations import TokenName, EXCLUDED_EVENTS, \
-    mongo_date_to_str, TransactionsList, OutputFormat
+    mongo_date_to_str, TransactionsList
+
+from api.models.common import OutputFormat
 
 from .common import make_responses
 

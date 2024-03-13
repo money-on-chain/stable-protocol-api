@@ -11,11 +11,6 @@ class TokenName(Enum):
     RISKPROX = 'RISKPROX'
 
 
-class OutputFormat(Enum):
-    JSON = 'json'
-    TEXT = 'text'
-
-
 EXCLUDED_EVENTS = [
     "RedeemRequestAlter",
     "RedeemRequestProcessed",
