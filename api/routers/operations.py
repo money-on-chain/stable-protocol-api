@@ -128,7 +128,7 @@ async def transactions_list(
         row = []
 
         for key in ['createdAt', 'blockNumber']:
-            row.append(tx[key])
+            row.append(tx.get(key, None))
         
         asset = str(tx['tokenInvolved'])       
         if asset==TokenName.RISKPRO.value:
