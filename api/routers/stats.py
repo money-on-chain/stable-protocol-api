@@ -9,6 +9,7 @@ from fastapi.responses import PlainTextResponse
 from api.models.common import OutputFormat
 from typing import Annotated
 from tabulate import tabulate
+from datetime import datetime
 
 
 link_url = 'https://grafana.moneyonchain.com/'
@@ -438,7 +439,7 @@ async def top_transactors(
                             '$gt': [
                                 '$createdAt', {
                                     '$dateSubtract': {
-                                        'startDate': '$$NOW', 
+                                        'startDate': datetime.now(), 
                                         'unit': 'day', 
                                         'amount': days
                                     }
