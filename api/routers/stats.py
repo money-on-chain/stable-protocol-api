@@ -9,7 +9,7 @@ from fastapi.responses import PlainTextResponse
 from api.models.common import OutputFormat
 from typing import Annotated
 from tabulate import tabulate
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 link_url = 'https://grafana.moneyonchain.com/'
@@ -420,16 +420,6 @@ async def top_transactors(
     
     query = [
         {
-            '$addFields': {
-                'days': {
-                    '$dateDiff': {
-                        'startDate': '$createdAt', 
-                        'endDate': datetime.now(), 
-                        'unit': 'day'
-                    }
-                }
-            }
-        }, {
             '$match': {
                 '$and': [
                     {
@@ -446,8 +436,9 @@ async def top_transactors(
                         ]
                     }, {
                         '$expr': {
-                            '$lt': [
-                                '$days', days + 1
+                            '$gt': [
+                                '$createdAt',
+                                datetime.now() - timedelta(days=days+1)
                             ]
                         }
                     }
