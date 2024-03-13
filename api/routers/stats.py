@@ -1,9 +1,14 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from api.db import get_db
 from .common import make_responses
 from api.models.stats import (TransactionsCountList, Periods,
                               TransactionsCountType, TransactionsCountToken,
-                              TransactionsCountEvent, TransactionsCountFnc)
+                              TransactionsCountEvent, TransactionsCountFnc,
+                              TopTransactorList)
+from fastapi.responses import PlainTextResponse
+from api.models.common import OutputFormat
+from typing import Annotated
+from tabulate import tabulate
 
 
 link_url = 'https://grafana.moneyonchain.com/'
@@ -263,7 +268,8 @@ async def transactions_base(
     "/api/v1/stats/volumen/stable",
     response_description="Successful Response",
     response_model = TransactionsCountList,
-    responses = make_responses(503, 400, 404))
+    responses = make_responses(503, 400, 404)
+)
 async def volumen_stable_token(
     event: TransactionsCountEvent = TransactionsCountEvent.ALL,
     group_by: Periods = Periods.DAY,
@@ -285,7 +291,8 @@ async def volumen_stable_token(
     "/api/v1/stats/volumen/pro",
     response_description="Successful Response",
     response_model = TransactionsCountList,
-    responses = make_responses(503, 400, 404))
+    responses = make_responses(503, 400, 404)
+)
 async def volumen_pro_token(
     event: TransactionsCountEvent = TransactionsCountEvent.ALL,
     group_by: Periods = Periods.DAY,
@@ -307,7 +314,8 @@ async def volumen_pro_token(
     "/api/v1/stats/volumen/governance",
     response_description="Successful Response",
     response_model = TransactionsCountList,
-    responses = make_responses(503, 400, 404))
+    responses = make_responses(503, 400, 404)
+)
 async def volumen_governance_token(
     event: TransactionsCountEvent = TransactionsCountEvent.ALL,
     group_by: Periods = Periods.DAY,
@@ -329,7 +337,8 @@ async def volumen_governance_token(
     "/api/v1/stats/transactions/{fnc}",
     response_description="Successful Response",
     response_model = TransactionsCountList,
-    responses = make_responses(503, 400, 404))
+    responses = make_responses(503, 400, 404)
+)
 async def transactions_count(
     type: TransactionsCountType = TransactionsCountType.ONLY_NEW_ACCOUNTS,
     token: TransactionsCountToken = TransactionsCountToken.ALL,
@@ -350,3 +359,131 @@ async def transactions_count(
         group_by = group_by,
         fnc = fnc
     )
+
+
+@router.get(
+    "/api/v1/stats/top_transactors",
+    response_description="Successful Response",
+    response_model = TopTransactorList,
+    responses = make_responses(
+       (200, {
+           "description": "Successful Response",
+           "content": {
+                "text/plain": {
+                   "example": """Address                                       TX Count
+------------------------------------------  ----------
+0x0000000000000000000000000000000000000001         123
+0x0000000000000000000000000000000000000002          45
+"""
+                },
+                "application/json": {
+                   "example": {
+                        "transactors": [
+                            {
+                                "address":
+                                 "0x0000000000000000000000000000000000000001",
+                                "tx_count": 123
+                            }, {
+                                "address":
+                                 "0x0000000000000000000000000000000000000002",
+                                "tx_count": 45                        
+                            }
+                        ]
+                    }
+                }
+            }
+        }),
+        503
+    )
+)
+async def top_transactors(
+        days: Annotated[int, Query(
+            title="Days",
+            description="Days until today to contemplate transactions.",
+            ge=1, le=3655)] = 30,
+        top: Annotated[int, Query(
+            title="Top",
+            description="Top, limit the number of records.",
+            ge=1, le=10000)] = 10,
+        format: OutputFormat = None,
+    ):
+    """
+    Shows the top of **transactors** accounts of the protocol.
+    """
+
+    # get mongo db connection
+    db = await get_db()
+
+    if db is None:
+        raise HTTPException(status_code=503, detail="Cannot get DB access")
+    
+    query = [
+        {
+            '$match': {
+                '$and': [
+                    {
+                        '$or': [
+                            {
+                                'event': 'RiskProMint'
+                            }, {
+                                'event': 'StableTokenMint'
+                            }, {
+                                'event': 'RiskProRedeem'
+                            }, {
+                                'event': 'FreeStableTokenRedeem'
+                            }
+                        ]
+                    }, {
+                        '$expr': {
+                            '$gt': [
+                                '$createdAt', {
+                                    '$dateSubtract': {
+                                        'startDate': '$$NOW', 
+                                        'unit': 'day', 
+                                        'amount': days
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }, {
+            '$group': {
+                '_id': '$address', 
+                'count': {
+                    '$sum': 1
+                }
+            }
+        }, {
+            '$sort': {
+                'count': -1
+            }
+        }, {
+            '$limit': top
+        }
+    ]
+
+    cursor = db["Transaction"].aggregate(query)
+ 
+    top_transactors = await cursor.to_list(length=None)
+    
+    transform_fnc = lambda x: {'address': x['_id'],
+                               'tx_count': x['count'] }
+
+    top_transactors = [transform_fnc(t) for t in top_transactors]
+
+    if format in [OutputFormat.JSON, None]:
+        return {'transactors': top_transactors}
+    
+    table =  [[t['address'], t['tx_count']] for t in top_transactors]
+    
+    text = []
+    text.append(tabulate(table, headers=['Address', 'TX Count']))
+    text = '\n'.join(text)
+
+    response = PlainTextResponse(text)
+
+    response.headers["Content-Disposition"] = f"attachment; filename=top_transactors.txt"
+
+    return response

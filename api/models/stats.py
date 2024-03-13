@@ -87,3 +87,36 @@ class TransactionsCountList(BaseModel):
                 "type": "all"
             }
         }
+
+
+class TopTransactor(BaseModel):
+    address: str
+    tx_count: int
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "address": "0x0000000000000000000000000000000000000001",
+                "tx_count": 123
+            }
+        }
+
+
+
+class TopTransactorList(BaseModel):
+    transactors: List[TopTransactor]
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "transactors": [
+                    {
+                        "address": "0x0000000000000000000000000000000000000001",
+                        "tx_count": 123
+                    }, {
+                        "address": "0x0000000000000000000000000000000000000002",
+                        "tx_count": 45                        
+                    }
+                ]
+            }
+        }
