@@ -420,6 +420,16 @@ async def top_transactors(
     
     query = [
         {
+            '$addFields': {
+                'days': {
+                    '$dateDiff': {
+                        'startDate': '$createdAt', 
+                        'endDate': datetime.now(), 
+                        'unit': 'day'
+                    }
+                }
+            }
+        }, {
             '$match': {
                 '$and': [
                     {
@@ -436,14 +446,8 @@ async def top_transactors(
                         ]
                     }, {
                         '$expr': {
-                            '$gt': [
-                                '$createdAt', {
-                                    '$dateSubtract': {
-                                        'startDate': datetime.now(), 
-                                        'unit': 'day', 
-                                        'amount': days
-                                    }
-                                }
+                            '$lt': [
+                                '$days', days + 1
                             ]
                         }
                     }
