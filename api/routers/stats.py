@@ -333,7 +333,7 @@ async def volumen_governance_token(
 async def transactions_count(
     type: TransactionsCountType = TransactionsCountType.ONLY_NEW_ACCOUNTS,
     token: TransactionsCountToken = TransactionsCountToken.ALL,
-    event: TransactionsCountEvent = 3758.ALL,
+    event: TransactionsCountEvent = TransactionsCountEvent.ALL,
     group_by: Periods = Periods.DAY,
     fnc: TransactionsCountFnc = TransactionsCountFnc.COUNT
     ):
