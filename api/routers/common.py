@@ -8,22 +8,25 @@ def make_responses(*args):
     for arg in args:
 
         try:
-            code, description = arg
+            code, data = arg
         except TypeError:
-            code, description = arg, None
+            code, data = arg, None
         
         assert(isinstance(code, int))
 
-        if description is None:
-            description = {
+        if data is None:
+            data = {
                 503: "Service Unavailable",
                 400: "Bad Request",
                 404: "Not found"                
             }.get(code, None)
 
-        responses[code] = {"description": description,
-            "content": {
-                "application/json": {
-                    "example": {"detail": description}}}}
+        if isinstance(data, str):
+            responses[code] = {"description": data,
+                "content": {
+                    "application/json": {
+                        "example": {"detail": data}}}}
+        else:
+            responses[code] = data
 
     return responses

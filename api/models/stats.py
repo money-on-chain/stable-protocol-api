@@ -23,7 +23,7 @@ class TransactionsCountEvent(Enum):
     ONLY_TRANSFER = 'only_transfer'
     ONLY_MINT = 'only_mint'
     ONLY_REDEEM = 'only_redeem'
-    ONLY_MINT_AN_REDEEM = 'only_mint_and_redeem'
+    ONLY_MINT_AND_REDEEM = 'only_mint_and_redeem'
 
 class TransactionsCountToken(Enum):
     ALL = 'all'
@@ -85,5 +85,38 @@ class TransactionsCountList(BaseModel):
                 "count": 10740,
                 "group_by": "day",
                 "type": "all"
+            }
+        }
+
+
+class TopTransactor(BaseModel):
+    address: str
+    tx_count: int
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "address": "0x0000000000000000000000000000000000000001",
+                "tx_count": 123
+            }
+        }
+
+
+
+class TopTransactorList(BaseModel):
+    transactors: List[TopTransactor]
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "transactors": [
+                    {
+                        "address": "0x0000000000000000000000000000000000000001",
+                        "tx_count": 123
+                    }, {
+                        "address": "0x0000000000000000000000000000000000000002",
+                        "tx_count": 45                        
+                    }
+                ]
             }
         }

@@ -1,5 +1,3 @@
-from os import getenv
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
@@ -16,8 +14,10 @@ from pymongo.errors import ServerSelectionTimeoutError as MongoTimeout
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
+from .common import get_env_var
 
-API_VERSION = '1.0.7'
+
+API_VERSION = '1.0.8'
 API_TITLE = 'Stable Protocol v0 API'
 API_DESCRIPTION = """
 This is a requirement for [stable-protocol-interface](https://github.com/money-on-chain/stable-protocol-interface)
@@ -59,23 +59,12 @@ async def db_error_exception_handler(request: Request,
         content={"detail": "Cannot get DB access"},
     )    
 
-# # Sets all CORS enabled origins
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=[str(origin) for origin in getenv("BACKEND_CORS_ORIGINS", default=["*"])],
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
-#
-# # Guards against HTTP Host Header attacks
-# app.add_middleware(TrustedHostMiddleware, allowed_hosts=getenv("ALLOWED_HOSTS", default=["*"]))
+BACKEND_CORS_ORIGINS = get_env_var("BACKEND_CORS_ORIGINS", list)
+ALLOWED_HOSTS = get_env_var("ALLOWED_HOSTS", list)
 
-BACKEND_CORS_ORIGINS = getenv("BACKEND_CORS_ORIGINS", default=False)
-ALLOWED_HOSTS = getenv("ALLOWED_HOSTS", default=False)
+if BACKEND_CORS_ORIGINS is not None:
 
-if BACKEND_CORS_ORIGINS:
-    # Sets all CORS enabled origins
+   # Sets all CORS enabled origins
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[str(origin) for origin in BACKEND_CORS_ORIGINS],
@@ -84,9 +73,11 @@ if BACKEND_CORS_ORIGINS:
         allow_headers=["*"],
     )
 
-if ALLOWED_HOSTS:
+if ALLOWED_HOSTS is not None:
+
     # Guards against HTTP Host Header attacks
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
+    app.add_middleware(TrustedHostMiddleware,
+                       allowed_hosts=[str(host) for host in ALLOWED_HOSTS])
 
 
 log.info("Starting webservice API version: {0}".format(API_VERSION))
