@@ -58,9 +58,6 @@ docker image build -t nginx_operations_$ENV -f ./Dockerfile.nginx .
 
 echo "Build done!"
 
-# login into aws ecr
-$(aws ecr get-login --no-include-email --region $AWS_REGION)
-
 echo "Logging to AWS done!"
 
 docker tag nginx_operations_$ENV:latest $AWS_ID.dkr.ecr.$AWS_REGION.amazonaws.com/nginx_operations_$ENV:latest
