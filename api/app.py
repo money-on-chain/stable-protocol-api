@@ -1,3 +1,6 @@
+from contextlib import asynccontextmanager
+from os import getenv
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
@@ -24,6 +27,9 @@ This is a requirement for [stable-protocol-interface](https://github.com/money-o
 ___
 """
 
+# Set to a falsy value (false/0/no) to disable Swagger/ReDoc in production
+DOCS_ENABLED = getenv("DOCS_ENABLED", "true").lower() not in ("false", "0", "no")
+
 tags_metadata = [{
     "name": "Webapp",
     "description": "Mainly used from the webapp"}]
@@ -35,17 +41,24 @@ tags_metadata += [{
     "description":
     "Related to _information_ and _health measurements_ of this _API_"}]
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await connect_and_init_db()
+    yield
+    await close_db_connect()
+
+
 app = FastAPI(
     title=API_TITLE,
     version=API_VERSION,
     description=API_DESCRIPTION,
-    openapi_url="/openapi.json",
-    docs_url="/",
-    openapi_tags=tags_metadata
+    openapi_url="/openapi.json" if DOCS_ENABLED else None,
+    docs_url="/" if DOCS_ENABLED else None,
+    redoc_url="/redoc" if DOCS_ENABLED else None,
+    openapi_tags=tags_metadata,
+    lifespan=lifespan,
 )
-
-app.add_event_handler("startup", connect_and_init_db)
-app.add_event_handler("shutdown", close_db_connect)
 
 app.include_router(operations.router)
 app.include_router(fastbtc.router)
