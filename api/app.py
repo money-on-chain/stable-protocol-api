@@ -64,11 +64,15 @@ ALLOWED_HOSTS = get_env_var("ALLOWED_HOSTS", list)
 
 if BACKEND_CORS_ORIGINS is not None:
 
-   # Sets all CORS enabled origins
+    # Sets all CORS enabled origins. This API is public, read-only and
+    # never sets cookies or reads Authorization headers, so credentialed
+    # requests are never needed here even when origins include "*"
+    # (the dapp frontend is served from IPFS and can be viewed through
+    # any gateway, so its origin can't be pinned to a fixed list).
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[str(origin) for origin in BACKEND_CORS_ORIGINS],
-        allow_credentials=True,
+        allow_credentials=False,
         allow_methods=["*"],
         allow_headers=["*"],
     )
