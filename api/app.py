@@ -4,6 +4,7 @@ from os import getenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 from api.routers import operations
 from api.routers import fastbtc
@@ -20,7 +21,7 @@ from fastapi.responses import JSONResponse
 from .common import get_env_var
 
 
-API_VERSION = '1.1.0'
+API_VERSION = '1.1.1'
 API_TITLE = 'Stable Protocol v1 API'
 API_DESCRIPTION = """
 This is a requirement for [stable-protocol-interface](https://github.com/money-on-chain/stable-protocol-interface)
@@ -90,10 +91,32 @@ if BACKEND_CORS_ORIGINS is not None:
         allow_headers=["*"],
     )
 
+class HostValidationExemptMiddleware:
+    """Applies TrustedHostMiddleware to every path except `exempt_paths`.
+
+    ALB/ECS target-group health checks hit the task by private IP and
+    cannot be configured to send a matching Host header, so `/ping` must
+    stay reachable regardless of Host or the task gets marked unhealthy
+    and killed even though the app itself is fine.
+    """
+
+    def __init__(self, app: ASGIApp, allowed_hosts, exempt_paths=("/ping",)):
+        self.app = app
+        self.exempt_paths = set(exempt_paths)
+        self.trusted_host_app = TrustedHostMiddleware(
+            app, allowed_hosts=allowed_hosts)
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send):
+        if scope["type"] == "http" and scope["path"] in self.exempt_paths:
+            await self.app(scope, receive, send)
+        else:
+            await self.trusted_host_app(scope, receive, send)
+
+
 if ALLOWED_HOSTS is not None:
 
     # Guards against HTTP Host Header attacks
-    app.add_middleware(TrustedHostMiddleware,
+    app.add_middleware(HostValidationExemptMiddleware,
                        allowed_hosts=[str(host) for host in ALLOWED_HOSTS])
 
 
