@@ -241,9 +241,9 @@ async def transactions_base(
             '_id': 1
         }
     })
-    
-    cursor = db["Transaction"].aggregate(query)
- 
+
+    cursor = db["Transaction"].aggregate(query, allowDiskUse=True)
+
     accounts = await cursor.to_list(length=None)
 
     if fnc==TransactionsCountFnc.COUNT:
@@ -460,8 +460,8 @@ async def top_transactors(
         }
     ]
 
-    cursor = db["Transaction"].aggregate(query)
- 
+    cursor = db["Transaction"].aggregate(query, allowDiskUse=True)
+
     top_transactors = await cursor.to_list(length=None)
     
     transform_fnc = lambda x: {'address': x['_id'],

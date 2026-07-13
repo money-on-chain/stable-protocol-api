@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Query, HTTPException
 from typing import Annotated
 
-from api.db import get_db
+from api.db import get_db, CASE_INSENSITIVE_COLLATION
 from api.models.fastbtc import mongo_date_to_str, PegOutList
 
 from .common import make_responses
@@ -41,18 +41,22 @@ async def peg_out_list(
         raise HTTPException(status_code=503, detail="Cannot get DB access")
 
     query_filter = {
-        "rskAddress": {"$regex": address, '$options': 'i'},
+        # Matched via collation (below) rather than a $regex/i scan; see
+        # the equivalent note in routers/operations.py.
+        "rskAddress": address,
         "type": "PEG_OUT"
     }
 
     transactions = await db["FastBtcBridge"]\
         .find(query_filter)\
+        .collation(CASE_INSENSITIVE_COLLATION)\
         .sort("timestamp", -1)\
         .skip(skip)\
         .limit(limit)\
         .to_list(limit)
 
-    transactions_count = await db["FastBtcBridge"].count_documents(query_filter)
+    transactions_count = await db["FastBtcBridge"].count_documents(
+        query_filter, collation=CASE_INSENSITIVE_COLLATION)
 
     for trx in transactions:
         trx['_id'] = str(trx['_id'])

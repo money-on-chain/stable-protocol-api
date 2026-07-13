@@ -4,7 +4,8 @@ from typing import Annotated
 from tabulate import tabulate
 from decimal import Decimal
 
-from api.db import get_db, VENDOR_ADDRESS, COMMISSION_SPLITTER_V2
+from api.db import get_db, VENDOR_ADDRESS, COMMISSION_SPLITTER_V2, \
+    CASE_INSENSITIVE_COLLATION
 from api.models.operations import TokenName, EXCLUDED_EVENTS, \
     mongo_date_to_str, TransactionsList
 
@@ -82,7 +83,11 @@ async def transactions_list(
         raise HTTPException(status_code=503, detail="Cannot get DB access")
 
     query_filter = {
-        "address": {"$regex": address, '$options': 'i'},
+        # Address is matched via collation (below) rather than a $regex/i
+        # scan, since the query param is already validated as a full
+        # 42-char hex address (^0x[a-fA-F0-9]{40}$), so a case-insensitive
+        # equality match is equivalent and can use an index.
+        "address": address,
         "event": {"$not": {"$in": EXCLUDED_EVENTS}},
         "otherAddress": {"$not": {"$in": [VENDOR_ADDRESS, COMMISSION_SPLITTER_V2]}}
     }
@@ -92,12 +97,14 @@ async def transactions_list(
 
     transactions = await db["Transaction"]\
         .find(query_filter)\
+        .collation(CASE_INSENSITIVE_COLLATION)\
         .sort("createdAt", -1)\
         .skip(skip)\
         .limit(limit)\
         .to_list(limit)
 
-    transactions_count = await db["Transaction"].count_documents(query_filter)
+    transactions_count = await db["Transaction"].count_documents(
+        query_filter, collation=CASE_INSENSITIVE_COLLATION)
 
     if format in [OutputFormat.JSON, None]:
 
