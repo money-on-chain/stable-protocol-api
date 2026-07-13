@@ -20,8 +20,8 @@ from fastapi.responses import JSONResponse
 from .common import get_env_var
 
 
-API_VERSION = '1.0.8'
-API_TITLE = 'Stable Protocol v0 API'
+API_VERSION = '1.1.0'
+API_TITLE = 'Stable Protocol v1 API'
 API_DESCRIPTION = """
 This is a requirement for [stable-protocol-interface](https://github.com/money-on-chain/stable-protocol-interface)
 ___

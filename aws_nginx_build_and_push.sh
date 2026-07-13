@@ -7,27 +7,12 @@ while getopts ":e:i:r:" o; do
     case "${o}" in
         e)
             e=${OPTARG}
-            (( e == "bnb-testnet" || e == "alpha-testnet" || e=="testnet" ||  e=="mainnet" || e=="rdoc-alpha-testnet" || e=="rdoc-testnet" ||  e=="rdoc-mainnet")) || usage
+            (( e=="testnet" ||  e=="mainnet")) || usage
             case $e in
-                bnb-testnet)
-                    ENV=$e
-                    ;;
-                alpha-testnet)
-                    ENV=$e
-                    ;;
                 testnet)
                     ENV=$e
                     ;;
                 mainnet)
-                    ENV=$e
-                    ;;
-                rdoc-alpha-testnet)
-                    ENV=$e
-                    ;;
-                rdoc-testnet)
-                    ENV=$e
-                    ;;
-                rdoc-mainnet)
                     ENV=$e
                     ;;
                 *)
@@ -57,8 +42,6 @@ fi
 docker image build -t nginx_operations_$ENV -f ./Dockerfile.nginx .
 
 echo "Build done!"
-
-echo "Logging to AWS done!"
 
 docker tag nginx_operations_$ENV:latest $AWS_ID.dkr.ecr.$AWS_REGION.amazonaws.com/nginx_operations_$ENV:latest
 
