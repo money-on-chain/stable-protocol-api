@@ -1,3 +1,4 @@
+import asyncio
 import re
 from os import getenv
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
@@ -9,6 +10,10 @@ from api.logger import log
 load_dotenv()
 
 db_client: AsyncIOMotorClient = None
+
+# Kept alive so it isn't garbage-collected mid-flight; see ensure_indexes()
+# scheduling note in connect_and_init_db().
+_index_task: asyncio.Task = None
 
 VENDOR_ADDRESS = getenv("VENDOR_ADDRESS", default="0x")
 COMMISSION_SPLITTER_V2 = getenv("COMMISSION_SPLITTER_V2", default="0x")
@@ -57,13 +62,18 @@ async def get_db() -> AsyncIOMotorClient:
 
 
 async def connect_and_init_db():
-    global db_client
+    global db_client, _index_task
     uri = getenv("APP_MONGO_URI", default="mongodb://localhost:27017")
     try:
         db_client = AsyncIOMotorClient(uri)
         server_info = await db_client.server_info()
         log.info(f"Connected to mongo! (version {server_info['version']}).")
-        await ensure_indexes()
+        # Scheduled, not awaited: a first-time index build on a large
+        # existing collection can take far longer than the container
+        # healthcheck's startup grace period, which would otherwise get
+        # the (otherwise healthy) container killed before it ever serves
+        # /ping. ensure_indexes() already catches and logs its own errors.
+        _index_task = asyncio.create_task(ensure_indexes())
     except Exception as e:
         log.error(
             f"Could not connect to mongo at {_mask_mongo_uri(uri)}: "
