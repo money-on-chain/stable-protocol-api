@@ -1,21 +1,27 @@
-FROM python:3.10
+FROM python:3.10-slim
 
 LABEL maintainer='martin.mulone@moneyonchain.com'
 
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONUNBUFFERED=1
 
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN mkdir /home/app
+RUN useradd --create-home --uid 1000 --shell /usr/sbin/nologin appuser
 
 WORKDIR /home/app/
 COPY api/ ./api/
+RUN chown -R appuser:appuser /home/app
 
-ENV PATH "$PATH:/home/app/"
+ENV PATH="$PATH:/home/app/"
 
-ENV PYTHONPATH "${PYTONPATH}:/home/app/"
+ENV PYTHONPATH="${PYTHONPATH}:/home/app/"
 
-CMD ["uvicorn", "api.app:app", "--host", "0.0.0.0", "--port", "5005"]
+USER appuser
 
 EXPOSE 5005
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5005/ping', timeout=3).read()" || exit 1
+
+CMD ["uvicorn", "api.app:app", "--host", "0.0.0.0", "--port", "5005"]
