@@ -82,6 +82,20 @@ _INDEX_SPECS += [
     )
 ]
 
+# The CoinPairPrice feeds can be filtered by the coin pair's contract address.
+_INDEX_SPECS += [
+    (collection, [("contractAddress", 1), ("createdAt", -1)],
+     {"collation": CASE_INSENSITIVE_COLLATION})
+    for collection in (
+        "event_CoinPairPrice_PricePublished",
+        "event_CoinPairPrice_EmergencyPricePublished",
+        "event_CoinPairPrice_ForcedPriceQueryModeSet",
+        "event_CoinPairPrice_OracleRewardTransfer",
+        "event_CoinPairPrice_NewRound",
+        "event_CoinPairPrice_OracleAutoUnsubscribed",
+    )
+]
+
 # The remaining OMoC event collections are served as unfiltered feeds sorted
 # by createdAt desc (api/routers/omoc.py), so a plain createdAt index keeps
 # the sort from blowing the in-memory sort limit as the logs grow.

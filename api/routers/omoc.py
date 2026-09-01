@@ -63,6 +63,11 @@ CallerQuery = Annotated[Optional[str], Query(
     title="Caller address",
     description="Optional filter by the caller address",
     regex='^0x[a-fA-F0-9]{40}$')]
+CoinPairAddressQuery = Annotated[Optional[str], Query(
+    title="Coin pair address",
+    description="Optional filter by the CoinPairPrice contract address "
+                "(one deployment per coin pair)",
+    regex='^0x[a-fA-F0-9]{40}$')]
 
 DEFAULT_HOLDER = '0xCD8A1c9aCc980ae031456573e34dC05cD7daE6e3'
 
@@ -510,11 +515,17 @@ async def oracle_manager_oracle_removed(
     response_model=CoinPairPricePricePublishedList,
     responses=make_responses(503),
 )
-async def coin_pair_price_price_published(limit: LimitQuery = 20, skip: SkipQuery = 0):
-    """Returns the CoinPairPrice price published events."""
+async def coin_pair_price_price_published(
+        coin_pair_address: CoinPairAddressQuery = None,
+        limit: LimitQuery = 20,
+        skip: SkipQuery = 0):
+    """Returns the CoinPairPrice price published events, optionally filtered by
+    the coin pair's contract address."""
     db = await require_db()
     return await list_events(
-        db, "event_CoinPairPrice_PricePublished", limit=limit, skip=skip)
+        db, "event_CoinPairPrice_PricePublished", limit=limit, skip=skip,
+        query_filter={"contractAddress": coin_pair_address} if coin_pair_address else None,
+        collation=CASE_INSENSITIVE_COLLATION if coin_pair_address else None)
 
 
 @router.get(
@@ -523,11 +534,17 @@ async def coin_pair_price_price_published(limit: LimitQuery = 20, skip: SkipQuer
     response_model=CoinPairPriceEmergencyPricePublishedList,
     responses=make_responses(503),
 )
-async def coin_pair_price_emergency_price_published(limit: LimitQuery = 20, skip: SkipQuery = 0):
-    """Returns the CoinPairPrice emergency price published events."""
+async def coin_pair_price_emergency_price_published(
+        coin_pair_address: CoinPairAddressQuery = None,
+        limit: LimitQuery = 20,
+        skip: SkipQuery = 0):
+    """Returns the CoinPairPrice emergency price published events, optionally
+    filtered by the coin pair's contract address."""
     db = await require_db()
     return await list_events(
-        db, "event_CoinPairPrice_EmergencyPricePublished", limit=limit, skip=skip)
+        db, "event_CoinPairPrice_EmergencyPricePublished", limit=limit, skip=skip,
+        query_filter={"contractAddress": coin_pair_address} if coin_pair_address else None,
+        collation=CASE_INSENSITIVE_COLLATION if coin_pair_address else None)
 
 
 @router.get(
@@ -536,11 +553,17 @@ async def coin_pair_price_emergency_price_published(limit: LimitQuery = 20, skip
     response_model=CoinPairPriceForcedPriceQueryModeSetList,
     responses=make_responses(503),
 )
-async def coin_pair_price_forced_price_query_mode_set(limit: LimitQuery = 20, skip: SkipQuery = 0):
-    """Returns the CoinPairPrice forced price query mode set events."""
+async def coin_pair_price_forced_price_query_mode_set(
+        coin_pair_address: CoinPairAddressQuery = None,
+        limit: LimitQuery = 20,
+        skip: SkipQuery = 0):
+    """Returns the CoinPairPrice forced price query mode set events, optionally
+    filtered by the coin pair's contract address."""
     db = await require_db()
     return await list_events(
-        db, "event_CoinPairPrice_ForcedPriceQueryModeSet", limit=limit, skip=skip)
+        db, "event_CoinPairPrice_ForcedPriceQueryModeSet", limit=limit, skip=skip,
+        query_filter={"contractAddress": coin_pair_address} if coin_pair_address else None,
+        collation=CASE_INSENSITIVE_COLLATION if coin_pair_address else None)
 
 
 @router.get(
@@ -549,11 +572,17 @@ async def coin_pair_price_forced_price_query_mode_set(limit: LimitQuery = 20, sk
     response_model=CoinPairPriceOracleRewardTransferList,
     responses=make_responses(503),
 )
-async def coin_pair_price_oracle_reward_transfer(limit: LimitQuery = 20, skip: SkipQuery = 0):
-    """Returns the CoinPairPrice oracle reward transfer events."""
+async def coin_pair_price_oracle_reward_transfer(
+        coin_pair_address: CoinPairAddressQuery = None,
+        limit: LimitQuery = 20,
+        skip: SkipQuery = 0):
+    """Returns the CoinPairPrice oracle reward transfer events, optionally
+    filtered by the coin pair's contract address."""
     db = await require_db()
     return await list_events(
-        db, "event_CoinPairPrice_OracleRewardTransfer", limit=limit, skip=skip)
+        db, "event_CoinPairPrice_OracleRewardTransfer", limit=limit, skip=skip,
+        query_filter={"contractAddress": coin_pair_address} if coin_pair_address else None,
+        collation=CASE_INSENSITIVE_COLLATION if coin_pair_address else None)
 
 
 @router.get(
@@ -562,11 +591,17 @@ async def coin_pair_price_oracle_reward_transfer(limit: LimitQuery = 20, skip: S
     response_model=CoinPairPriceNewRoundList,
     responses=make_responses(503),
 )
-async def coin_pair_price_new_round(limit: LimitQuery = 20, skip: SkipQuery = 0):
-    """Returns the CoinPairPrice new round events."""
+async def coin_pair_price_new_round(
+        coin_pair_address: CoinPairAddressQuery = None,
+        limit: LimitQuery = 20,
+        skip: SkipQuery = 0):
+    """Returns the CoinPairPrice new round events, optionally filtered by the
+    coin pair's contract address."""
     db = await require_db()
     return await list_events(
-        db, "event_CoinPairPrice_NewRound", limit=limit, skip=skip)
+        db, "event_CoinPairPrice_NewRound", limit=limit, skip=skip,
+        query_filter={"contractAddress": coin_pair_address} if coin_pair_address else None,
+        collation=CASE_INSENSITIVE_COLLATION if coin_pair_address else None)
 
 
 @router.get(
@@ -575,8 +610,14 @@ async def coin_pair_price_new_round(limit: LimitQuery = 20, skip: SkipQuery = 0)
     response_model=CoinPairPriceOracleAutoUnsubscribedList,
     responses=make_responses(503),
 )
-async def coin_pair_price_oracle_auto_unsubscribed(limit: LimitQuery = 20, skip: SkipQuery = 0):
-    """Returns the CoinPairPrice oracle auto unsubscribed events."""
+async def coin_pair_price_oracle_auto_unsubscribed(
+        coin_pair_address: CoinPairAddressQuery = None,
+        limit: LimitQuery = 20,
+        skip: SkipQuery = 0):
+    """Returns the CoinPairPrice oracle auto unsubscribed events, optionally
+    filtered by the coin pair's contract address."""
     db = await require_db()
     return await list_events(
-        db, "event_CoinPairPrice_OracleAutoUnsubscribed", limit=limit, skip=skip)
+        db, "event_CoinPairPrice_OracleAutoUnsubscribed", limit=limit, skip=skip,
+        query_filter={"contractAddress": coin_pair_address} if coin_pair_address else None,
+        collation=CASE_INSENSITIVE_COLLATION if coin_pair_address else None)
