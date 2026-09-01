@@ -7,7 +7,6 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from api.routers import operations
-from api.routers import fastbtc
 from api.routers import stats
 from api.routers import omoc
 
@@ -65,7 +64,6 @@ app = FastAPI(
 )
 
 app.include_router(operations.router)
-app.include_router(fastbtc.router)
 app.include_router(stats.router)
 app.include_router(omoc.router)
 

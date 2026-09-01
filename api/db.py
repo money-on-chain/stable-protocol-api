@@ -29,8 +29,6 @@ _INDEX_SPECS = [
     ("Transaction", [("tokenInvolved", 1), ("createdAt", -1)], {}),
     ("Transaction", [("event", 1), ("confirmationTime", 1)], {}),
     ("Transaction", [("otherAddress", 1)], {}),
-    ("FastBtcBridge", [("rskAddress", 1), ("type", 1), ("timestamp", -1)],
-     {"collation": CASE_INSENSITIVE_COLLATION}),
     ("event_VestingFactory_VestingCreated",
      [("holder", 1), ("createdAt", -1)],
      {"collation": CASE_INSENSITIVE_COLLATION}),
