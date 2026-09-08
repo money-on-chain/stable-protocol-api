@@ -30,7 +30,9 @@ from api.models.omoc import DATE_FIELDS, \
     CoinPairPriceForcedPriceQueryModeSetList, \
     CoinPairPriceOracleRewardTransferList, \
     CoinPairPriceNewRoundList, \
-    CoinPairPriceOracleAutoUnsubscribedList
+    CoinPairPriceOracleAutoUnsubscribedList, \
+    TasksRunnerTaskExecutedList, \
+    TaskTriggerOrderTriggerOrdersRevertedList
 
 from .common import make_responses
 
@@ -38,8 +40,9 @@ from .common import make_responses
 tags_metadata = [{
     "name": "OMoC",
     "description": "On-chain Money on Chain governance: staking, vesting, "
-                   "delay machine, voting machine, oracle manager and "
-                   "decentralized oracle (CoinPairPrice) events"}]
+                   "delay machine, voting machine, oracle manager, "
+                   "decentralized oracle (CoinPairPrice) and keeper task "
+                   "(TasksRunner / TaskTriggerOrder) events"}]
 
 
 router = APIRouter(tags=["OMoC"])
@@ -621,3 +624,33 @@ async def coin_pair_price_oracle_auto_unsubscribed(
         db, "event_CoinPairPrice_OracleAutoUnsubscribed", limit=limit, skip=skip,
         query_filter={"contractAddress": coin_pair_address} if coin_pair_address else None,
         collation=CASE_INSENSITIVE_COLLATION if coin_pair_address else None)
+
+
+# --- Keeper tasks (TasksRunner / TaskTriggerOrder) --------------------------
+
+@router.get(
+    "/api/v1/omoc/tasks_runner_task_executed/",
+    response_description="Returns the TasksRunner task executed events",
+    response_model=TasksRunnerTaskExecutedList,
+    responses=make_responses(503),
+)
+async def tasks_runner_task_executed(limit: LimitQuery = 20, skip: SkipQuery = 0):
+    """Returns the TasksRunner task executed events (one log per task run in a
+    keeper batch)."""
+    db = await require_db()
+    return await list_events(
+        db, "event_TasksRunner_TaskExecuted", limit=limit, skip=skip)
+
+
+@router.get(
+    "/api/v1/omoc/task_trigger_order_trigger_orders_reverted/",
+    response_description="Returns the TaskTriggerOrder trigger orders reverted events",
+    response_model=TaskTriggerOrderTriggerOrdersRevertedList,
+    responses=make_responses(503),
+)
+async def task_trigger_order_trigger_orders_reverted(limit: LimitQuery = 20, skip: SkipQuery = 0):
+    """Returns the mocFlow TaskTriggerOrder trigger orders reverted events
+    (emitted only when the reverse-auction triggerOrders() call reverts)."""
+    db = await require_db()
+    return await list_events(
+        db, "event_TaskTriggerOrder_TriggerOrdersReverted", limit=limit, skip=skip)

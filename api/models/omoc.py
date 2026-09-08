@@ -1221,3 +1221,89 @@ class CoinPairPriceOracleAutoUnsubscribedList(BaseModel):
                 "last_block_indexed": "12345678"
             }
         }
+
+
+class TasksRunnerTaskExecuted(BaseModel):
+    id: str = Field(default_factory=uuid.uuid4, alias="_id")
+    hash: Optional[str] = None
+    blockNumber: Optional[int] = None
+    sender: Optional[str] = None
+    votedOracle: Optional[str] = None
+    task: Optional[str] = None
+    taskBlockNumber: Optional[str] = None
+    success: Optional[bool] = None
+    createdAt: Optional[datetime.datetime] = None
+    lastUpdatedAt: Optional[datetime.datetime] = None
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "_id": "658dac848e6961287ceb62e5",
+                "hash": "0xaddc1a3b49fcd5528a4a394d98e095c1f89475e1e30b9a237e93231c15e4a265",
+                "blockNumber": 4643915,
+                "sender": "0xCD8A1c9aCc980ae031456573e34dC05cD7daE6e3",
+                "votedOracle": "0xF20Ee80f56F41b6323D140b07A011c77509Fb99D",
+                "task": "0x8a4f9f6b8e2c1d0a3b5e7c9d1f2a4b6c8d0e2f4a",
+                "taskBlockNumber": "4643910",
+                "success": True,
+                "createdAt": "2023-12-28T14:15:01.629000Z",
+                "lastUpdatedAt": "2023-12-28T14:15:01.629000Z"
+            }
+        }
+
+
+class TasksRunnerTaskExecutedList(BaseModel):
+    results: List[TasksRunnerTaskExecuted]
+    count: int = 0
+    total: int = 0
+    last_block_indexed: int = 0
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "results": "[]",
+                "count": "0",
+                "total": "0",
+                "last_block_indexed": "12345678"
+            }
+        }
+
+
+class TaskTriggerOrderTriggerOrdersReverted(BaseModel):
+    id: str = Field(default_factory=uuid.uuid4, alias="_id")
+    hash: Optional[str] = None
+    blockNumber: Optional[int] = None
+    reason: Optional[str] = None
+    data: Optional[str] = None
+    createdAt: Optional[datetime.datetime] = None
+    lastUpdatedAt: Optional[datetime.datetime] = None
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "_id": "658dac848e6961287ceb62e5",
+                "hash": "0xaddc1a3b49fcd5528a4a394d98e095c1f89475e1e30b9a237e93231c15e4a265",
+                "blockNumber": 4643915,
+                "reason": "auction not started",
+                "data": "0x",
+                "createdAt": "2023-12-28T14:15:01.629000Z",
+                "lastUpdatedAt": "2023-12-28T14:15:01.629000Z"
+            }
+        }
+
+
+class TaskTriggerOrderTriggerOrdersRevertedList(BaseModel):
+    results: List[TaskTriggerOrderTriggerOrdersReverted]
+    count: int = 0
+    total: int = 0
+    last_block_indexed: int = 0
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "results": "[]",
+                "count": "0",
+                "total": "0",
+                "last_block_indexed": "12345678"
+            }
+        }

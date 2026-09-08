@@ -125,6 +125,8 @@ _INDEX_SPECS += [
         "event_CoinPairPrice_OracleRewardTransfer",
         "event_CoinPairPrice_NewRound",
         "event_CoinPairPrice_OracleAutoUnsubscribed",
+        "event_TasksRunner_TaskExecuted",
+        "event_TaskTriggerOrder_TriggerOrdersReverted",
     )
 ]
 
