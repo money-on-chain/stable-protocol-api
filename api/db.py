@@ -29,8 +29,105 @@ _INDEX_SPECS = [
     ("Transaction", [("tokenInvolved", 1), ("createdAt", -1)], {}),
     ("Transaction", [("event", 1), ("confirmationTime", 1)], {}),
     ("Transaction", [("otherAddress", 1)], {}),
-    ("FastBtcBridge", [("rskAddress", 1), ("type", 1), ("timestamp", -1)],
+    ("event_VestingFactory_VestingCreated",
+     [("holder", 1), ("createdAt", -1)],
      {"collation": CASE_INSENSITIVE_COLLATION}),
+    ("event_IncentiveV2_ClaimOK", [("recipient", 1), ("createdAt", -1)],
+     {"collation": CASE_INSENSITIVE_COLLATION}),
+]
+
+# Some OMoC event feeds accept an optional address filter that "$or"s the
+# address against every party field on the event (api/routers/omoc.py), so
+# index each of those fields (with the createdAt sort key) under the same
+# case-insensitive collation the query uses.
+_ADDRESS_FILTERED_FEEDS = {
+    "event_DelayMachine_PaymentCancel": ("source", "destination"),
+    "event_DelayMachine_PaymentDeposit": ("source", "destination"),
+    "event_DelayMachine_PaymentWithdraw": ("source", "destination"),
+    "event_Supporters_AddStake": ("user", "subaccount", "sender"),
+    "event_Supporters_Withdraw": ("msgSender", "subaccount", "receiver"),
+    "event_Supporters_WithdrawStake": ("user", "subaccount", "destination"),
+}
+_INDEX_SPECS += [
+    (collection, [(field, 1), ("createdAt", -1)],
+     {"collation": CASE_INSENSITIVE_COLLATION})
+    for collection, fields in _ADDRESS_FILTERED_FEEDS.items()
+    for field in fields
+]
+
+# Several VotingMachine feeds can also be filtered by proposal address.
+_INDEX_SPECS += [
+    (collection, [("proposal", 1), ("createdAt", -1)],
+     {"collation": CASE_INSENSITIVE_COLLATION})
+    for collection in (
+        "event_VotingMachine_VoteEvent",
+        "event_VotingMachine_PreVoteStepEvent",
+        "event_VotingMachine_AcceptedStepEvent",
+        "event_VotingMachine_UnregisterEvent",
+    )
+]
+
+# The OracleManager feeds can be filtered by caller address.
+_INDEX_SPECS += [
+    (collection, [("caller", 1), ("createdAt", -1)],
+     {"collation": CASE_INSENSITIVE_COLLATION})
+    for collection in (
+        "event_OracleManager_OracleRegistered",
+        "event_OracleManager_OracleStakeAdded",
+        "event_OracleManager_OracleSubscribed",
+        "event_OracleManager_OracleUnsubscribed",
+        "event_OracleManager_OracleRemoved",
+    )
+]
+
+# The CoinPairPrice feeds can be filtered by the coin pair's contract address.
+_INDEX_SPECS += [
+    (collection, [("contractAddress", 1), ("createdAt", -1)],
+     {"collation": CASE_INSENSITIVE_COLLATION})
+    for collection in (
+        "event_CoinPairPrice_PricePublished",
+        "event_CoinPairPrice_EmergencyPricePublished",
+        "event_CoinPairPrice_ForcedPriceQueryModeSet",
+        "event_CoinPairPrice_OracleRewardTransfer",
+        "event_CoinPairPrice_NewRound",
+        "event_CoinPairPrice_OracleAutoUnsubscribed",
+    )
+]
+
+# The remaining OMoC event collections are served as unfiltered feeds sorted
+# by createdAt desc (api/routers/omoc.py), so a plain createdAt index keeps
+# the sort from blowing the in-memory sort limit as the logs grow.
+_INDEX_SPECS += [
+    (collection, [("createdAt", -1)], {})
+    for collection in (
+        "event_DelayMachine_PaymentCancel",
+        "event_DelayMachine_PaymentDeposit",
+        "event_DelayMachine_PaymentWithdraw",
+        "event_Supporters_AddStake",
+        "event_Supporters_CancelEarnings",
+        "event_Supporters_PayEarnings",
+        "event_Supporters_Withdraw",
+        "event_Supporters_WithdrawStake",
+        "event_VotingMachine_PreVoteEvent",
+        "event_VotingMachine_VoteEvent",
+        "event_VotingMachine_PreVoteStepEvent",
+        "event_VotingMachine_VoteStepEvent",
+        "event_VotingMachine_AcceptedStepEvent",
+        "event_VotingMachine_UnregisterEvent",
+        "event_OracleManager_OracleRegistered",
+        "event_OracleManager_OracleStakeAdded",
+        "event_OracleManager_OracleSubscribed",
+        "event_OracleManager_OracleUnsubscribed",
+        "event_OracleManager_OracleRemoved",
+        "event_CoinPairPrice_PricePublished",
+        "event_CoinPairPrice_EmergencyPricePublished",
+        "event_CoinPairPrice_ForcedPriceQueryModeSet",
+        "event_CoinPairPrice_OracleRewardTransfer",
+        "event_CoinPairPrice_NewRound",
+        "event_CoinPairPrice_OracleAutoUnsubscribed",
+        "event_TasksRunner_TaskExecuted",
+        "event_TaskTriggerOrder_TriggerOrdersReverted",
+    )
 ]
 
 

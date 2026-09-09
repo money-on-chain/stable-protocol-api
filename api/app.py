@@ -7,8 +7,8 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from api.routers import operations
-from api.routers import fastbtc
 from api.routers import stats
+from api.routers import omoc
 
 from api.models.base import InfoApi
 from api.logger import log
@@ -21,7 +21,7 @@ from fastapi.responses import JSONResponse
 from .common import get_env_var
 
 
-API_VERSION = '1.1.1'
+API_VERSION = '1.1.2'
 API_TITLE = 'Stable Protocol v1 API'
 API_DESCRIPTION = """
 This is a requirement for [stable-protocol-interface](https://github.com/money-on-chain/stable-protocol-interface)
@@ -36,6 +36,8 @@ tags_metadata = [{
     "description": "Mainly used from the webapp"}]
 
 tags_metadata += stats.tags_metadata
+
+tags_metadata += omoc.tags_metadata
 
 tags_metadata += [{
     "name": "Diagnosis",
@@ -62,8 +64,8 @@ app = FastAPI(
 )
 
 app.include_router(operations.router)
-app.include_router(fastbtc.router)
 app.include_router(stats.router)
+app.include_router(omoc.router)
 
 @app.exception_handler(MongoTimeout)
 async def db_error_exception_handler(request: Request,
