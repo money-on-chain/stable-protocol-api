@@ -25,10 +25,12 @@ async def peg_out_list(
         limit: Annotated[int, Query(
             title="Limit",
             description="Limit",
+            ge=1,
             le=1000)] = 20,
         skip: Annotated[int, Query(
             title="Skip",
             description="Skip",
+            ge=0,
             le=10000)] = 0):
     """
     Returns the pegout requests from an address

@@ -71,8 +71,8 @@ async def lending_deposits(
             title="User address",
             description="Filter by user or recipient address",
             pattern=ADDRESS_PATTERN)] = None,
-        limit: Annotated[int, Query(title="Limit", description="Limit", le=1000)] = 20,
-        skip: Annotated[int, Query(title="Skip", description="Skip", le=10000)] = 0
+        limit: Annotated[int, Query(title="Limit", description="Limit", ge=1, le=1000)] = 20,
+        skip: Annotated[int, Query(title="Skip", description="Skip", ge=0, le=10000)] = 0
 ):
     db = await get_db()
     if db is None:
@@ -96,8 +96,8 @@ async def lending_withdrawals(
             title="User address",
             description="Filter by user or recipient address",
             pattern=ADDRESS_PATTERN)] = None,
-        limit: Annotated[int, Query(title="Limit", description="Limit", le=1000)] = 20,
-        skip: Annotated[int, Query(title="Skip", description="Skip", le=10000)] = 0
+        limit: Annotated[int, Query(title="Limit", description="Limit", ge=1, le=1000)] = 20,
+        skip: Annotated[int, Query(title="Skip", description="Skip", ge=0, le=10000)] = 0
 ):
     db = await get_db()
     if db is None:
@@ -121,8 +121,8 @@ async def lending_add_ac_to_vault(
             title="User address",
             description="Filter by user or recipient address",
             pattern=ADDRESS_PATTERN)] = None,
-        limit: Annotated[int, Query(title="Limit", description="Limit", le=1000)] = 20,
-        skip: Annotated[int, Query(title="Skip", description="Skip", le=10000)] = 0
+        limit: Annotated[int, Query(title="Limit", description="Limit", ge=1, le=1000)] = 20,
+        skip: Annotated[int, Query(title="Skip", description="Skip", ge=0, le=10000)] = 0
 ):
     db = await get_db()
     if db is None:
@@ -146,8 +146,8 @@ async def lending_remove_ac_from_vault(
             title="User address",
             description="Filter by user or recipient address",
             pattern=ADDRESS_PATTERN)] = None,
-        limit: Annotated[int, Query(title="Limit", description="Limit", le=1000)] = 20,
-        skip: Annotated[int, Query(title="Skip", description="Skip", le=10000)] = 0
+        limit: Annotated[int, Query(title="Limit", description="Limit", ge=1, le=1000)] = 20,
+        skip: Annotated[int, Query(title="Skip", description="Skip", ge=0, le=10000)] = 0
 ):
     db = await get_db()
     if db is None:
@@ -171,8 +171,8 @@ async def lending_borrows(
             title="User address",
             description="Filter by user or recipient address",
             pattern=ADDRESS_PATTERN)] = None,
-        limit: Annotated[int, Query(title="Limit", description="Limit", le=1000)] = 20,
-        skip: Annotated[int, Query(title="Skip", description="Skip", le=10000)] = 0
+        limit: Annotated[int, Query(title="Limit", description="Limit", ge=1, le=1000)] = 20,
+        skip: Annotated[int, Query(title="Skip", description="Skip", ge=0, le=10000)] = 0
 ):
     db = await get_db()
     if db is None:
@@ -196,8 +196,8 @@ async def lending_repays(
             title="User address",
             description="Filter by user or recipient address",
             pattern=ADDRESS_PATTERN)] = None,
-        limit: Annotated[int, Query(title="Limit", description="Limit", le=1000)] = 20,
-        skip: Annotated[int, Query(title="Skip", description="Skip", le=10000)] = 0
+        limit: Annotated[int, Query(title="Limit", description="Limit", ge=1, le=1000)] = 20,
+        skip: Annotated[int, Query(title="Skip", description="Skip", ge=0, le=10000)] = 0
 ):
     db = await get_db()
     if db is None:
@@ -221,8 +221,8 @@ async def lending_repays_with_ac(
             title="User address",
             description="Filter by user address",
             pattern=ADDRESS_PATTERN)] = None,
-        limit: Annotated[int, Query(title="Limit", description="Limit", le=1000)] = 20,
-        skip: Annotated[int, Query(title="Skip", description="Skip", le=10000)] = 0
+        limit: Annotated[int, Query(title="Limit", description="Limit", ge=1, le=1000)] = 20,
+        skip: Annotated[int, Query(title="Skip", description="Skip", ge=0, le=10000)] = 0
 ):
     db = await get_db()
     if db is None:
@@ -245,8 +245,8 @@ async def lending_liquidations(
             title="User address",
             description="Filter by liquidated user or liquidator address",
             pattern=ADDRESS_PATTERN)] = None,
-        limit: Annotated[int, Query(title="Limit", description="Limit", le=1000)] = 20,
-        skip: Annotated[int, Query(title="Skip", description="Skip", le=10000)] = 0
+        limit: Annotated[int, Query(title="Limit", description="Limit", ge=1, le=1000)] = 20,
+        skip: Annotated[int, Query(title="Skip", description="Skip", ge=0, le=10000)] = 0
 ):
     db = await get_db()
     if db is None:
@@ -266,8 +266,8 @@ async def lending_liquidations(
     response_model=EventLendingTPInjectionList
 )
 async def lending_tp_injections(
-        limit: Annotated[int, Query(title="Limit", description="Limit", le=1000)] = 20,
-        skip: Annotated[int, Query(title="Skip", description="Skip", le=10000)] = 0
+        limit: Annotated[int, Query(title="Limit", description="Limit", ge=1, le=1000)] = 20,
+        skip: Annotated[int, Query(title="Skip", description="Skip", ge=0, le=10000)] = 0
 ):
     db = await get_db()
     if db is None:
@@ -286,8 +286,8 @@ async def lending_operation_queued(
             title="User address",
             description="Filter by user or recipient address",
             pattern=ADDRESS_PATTERN)] = None,
-        limit: Annotated[int, Query(title="Limit", description="Limit", le=1000)] = 20,
-        skip: Annotated[int, Query(title="Skip", description="Skip", le=10000)] = 0
+        limit: Annotated[int, Query(title="Limit", description="Limit", ge=1, le=1000)] = 20,
+        skip: Annotated[int, Query(title="Skip", description="Skip", ge=0, le=10000)] = 0
 ):
     db = await get_db()
     if db is None:
@@ -310,8 +310,8 @@ async def lending_operation_error(
         oper_id: Annotated[Optional[int], Query(
             title="Operation ID",
             description="Filter by operation ID")] = None,
-        limit: Annotated[int, Query(title="Limit", description="Limit", le=1000)] = 20,
-        skip: Annotated[int, Query(title="Skip", description="Skip", le=10000)] = 0
+        limit: Annotated[int, Query(title="Limit", description="Limit", ge=1, le=1000)] = 20,
+        skip: Annotated[int, Query(title="Skip", description="Skip", ge=0, le=10000)] = 0
 ):
     db = await get_db()
     if db is None:
@@ -333,8 +333,8 @@ async def lending_operation_executed(
         oper_id: Annotated[Optional[int], Query(
             title="Operation ID",
             description="Filter by operation ID")] = None,
-        limit: Annotated[int, Query(title="Limit", description="Limit", le=1000)] = 20,
-        skip: Annotated[int, Query(title="Skip", description="Skip", le=10000)] = 0
+        limit: Annotated[int, Query(title="Limit", description="Limit", ge=1, le=1000)] = 20,
+        skip: Annotated[int, Query(title="Skip", description="Skip", ge=0, le=10000)] = 0
 ):
     db = await get_db()
     if db is None:
@@ -367,8 +367,8 @@ async def lending_user_operations(
             title="Event name",
             description="Filter by event type: Deposit, Withdraw, AddACtoVault, RemoveACfromVault, Borrow, Repay, RepayWithAC, Liquidate"
         )] = None,
-        limit: Annotated[int, Query(title="Limit", description="Limit", le=1000)] = 20,
-        skip: Annotated[int, Query(title="Skip", description="Skip", le=10000)] = 0
+        limit: Annotated[int, Query(title="Limit", description="Limit", ge=1, le=1000)] = 20,
+        skip: Annotated[int, Query(title="Skip", description="Skip", ge=0, le=10000)] = 0
 ):
     db = await get_db()
     if db is None:
