@@ -40,7 +40,7 @@ async def _get_last_block_indexed(db) -> int:
 async def _query_collection(db, collection_name: str, query_filter: dict, limit: int, skip: int) -> dict:
     rows = await db[collection_name] \
         .find(query_filter) \
-        .sort("blockNumber", -1) \
+        .sort([("blockNumber", -1), ("_id", -1)]) \
         .skip(skip) \
         .limit(limit) \
         .to_list(limit)
