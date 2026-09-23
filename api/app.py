@@ -8,6 +8,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from api.routers import operations
 from api.routers import stats
+from api.routers import lending
 from api.routers import omoc
 
 from api.models.base import InfoApi
@@ -37,6 +38,7 @@ tags_metadata = [{
 
 tags_metadata += stats.tags_metadata
 
+tags_metadata += lending.tags_metadata
 tags_metadata += omoc.tags_metadata
 
 tags_metadata += [{
@@ -65,6 +67,7 @@ app = FastAPI(
 
 app.include_router(operations.router)
 app.include_router(stats.router)
+app.include_router(lending.router)
 app.include_router(omoc.router)
 
 @app.exception_handler(MongoTimeout)
