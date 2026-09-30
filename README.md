@@ -63,4 +63,9 @@ stable_protocol_api
 - `BACKEND_CORS_ORIGINS` controls which browser origins may read this API's responses. This API is public, read-only, and never sets cookies or reads `Authorization` headers (CORS credentials are always disabled), so `["*"]` is an acceptable value — needed because the dapp frontend is deployed to IPFS and can be viewed through any gateway (`ipfs.io`, `dweb.link`, a self-hosted gateway, etc.), so its origin can't be pinned to a fixed list.
 - `ALLOWED_HOSTS` is unrelated to the frontend's origin — it's the `Host` header this backend itself will accept. It must always be the API's own real hostname(s) for that environment (e.g. `api-operations.moneyonchain.com`), **never `["*"]`**, regardless of how open `BACKEND_CORS_ORIGINS` is.
 
+The `/api/v1/omoc/voting/proposals/{address}/content/` endpoint serves a proposal's write-up from the governance forum (Discourse), looked up by its changer address and cached in memory. Both settings are optional:
+
+- `GOVERNANCE_FORUM_URL` — forum base url, defaults to `https://forum.moneyonchain.com`. Set it empty to disable the lookup (the endpoint then always returns 404).
+- `GOVERNANCE_FORUM_TOPICS` — JSON object of changer address → topic id, for proposals the forum search can't resolve, e.g. `'{"0x015F2836467Ce43E27D22b0d03929c371Ff1d0f1": 468}'`.
+
 
