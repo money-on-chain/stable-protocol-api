@@ -66,5 +66,6 @@ stable_protocol_api
 The `/api/v1/omoc/voting/` endpoints serve the OMoC proposal history from the indexed VotingMachine events, matched by changer address to the MIP documents of the proposal registry ([money-on-chain/proposals-changers](https://github.com/money-on-chain/proposals-changers), `docs/proposals/proposals.json`). The registry and its documents are cached in memory for 5 minutes, and the last good copy is kept if a refresh fails.
 
 - `GOVERNANCE_REGISTRY_URL` — url of `proposals.json`; documents and images are resolved relative to it. Defaults to the `proposals_registry` branch on raw.githubusercontent.com. Set it empty to disable the registry (proposals are then served with `listed: null`).
+- `GOVERNANCE_NETWORK` — network the API serves, as named in the registry: `rskMainnet` or `rskTestnet`. The `mips` endpoints only return MIPs with a changer on that network (and only that network's changers); empty returns every MIP. Set in `environments/`.
 
 

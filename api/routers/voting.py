@@ -51,6 +51,11 @@ ProposerQuery = Annotated[Optional[str], Query(
     title="Proposer address",
     description="Optional filter by the address that submitted the proposal",
     pattern=ADDRESS_PATTERN)]
+NetworkQuery = Annotated[Optional[str], Query(
+    title="Network",
+    description="Overrides the API's network (GOVERNANCE_NETWORK): " +
+                ", ".join(registry.NETWORKS),
+    pattern="^(" + "|".join(registry.NETWORKS) + ")$")]
 ListedQuery = Annotated[Optional[bool], Query(
     title="Listed",
     description="Optional filter: true for proposals in the proposal registry, "
@@ -170,11 +175,18 @@ async def voting_proposal_content(address: ProposalPath):
     response_model=MipEntryList,
     responses=make_responses(503),
 )
-async def voting_mips(limit: LimitQuery = 100, skip: SkipQuery = 0):
-    """Returns the MIPs of the proposal registry, including drafts and MIPs
-    without a changer, with their changer addresses per network."""
+async def voting_mips(
+        network: NetworkQuery = None,
+        limit: LimitQuery = 100,
+        skip: SkipQuery = 0):
+    """Returns the MIPs of the proposal registry that have a changer on the
+    API's network (GOVERNANCE_NETWORK, or `network`), with only that network's
+    changers. Lists every MIP when no network is configured."""
     entries = await require_registry()
-    results = sorted(entries["byMip"].values(), key=lambda e: e["mip"], reverse=True)
+    network = network or registry.NETWORK
+    results = [e for e in (registry.on_network(e, network)
+                           for e in entries["byMip"].values()) if e]
+    results.sort(key=lambda e: e["mip"], reverse=True)
     page = results[skip:skip + limit]
     return {"results": page, "count": len(page), "total": len(results)}
 
@@ -185,11 +197,15 @@ async def voting_mips(limit: LimitQuery = 100, skip: SkipQuery = 0):
     response_model=MipContent,
     responses=make_responses(404, 503),
 )
-async def voting_mip(mip: MipPath):
+async def voting_mip(mip: MipPath, network: NetworkQuery = None):
     """Returns a MIP's registry entry and markdown document, like
-    /proposals/{address}/content/ but looked up by MIP number."""
+    /proposals/{address}/content/ but looked up by MIP number. 404 when the
+    MIP has no changer on the API's network (GOVERNANCE_NETWORK, or
+    `network`)."""
     entries = await require_registry()
     entry = entries["byMip"].get(registry.normalize_mip(mip))
+    if entry is not None:
+        entry = registry.on_network(entry, network or registry.NETWORK)
     if entry is None:
         raise HTTPException(status_code=404, detail="Not found")
     return await mip_content(entry)

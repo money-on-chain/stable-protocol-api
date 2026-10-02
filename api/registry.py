@@ -15,9 +15,16 @@ The registry and documents are fetched from the repo (raw.githubusercontent.com
 by default) and cached in-process - the API's mongo user may be read-only. On a
 failed refresh the last good copy keeps being served.
 
+Until the VotingMachine emits its voting events on a network (on mainnet, from
+MIP#263501 on), the indexed history is empty there and the registry's MIPs with
+a changer on the API's network are the list of proposals to show.
+
 Env:
   GOVERNANCE_REGISTRY_URL  url of proposals.json (empty disables the registry).
                            Documents and images are resolved relative to it.
+  GOVERNANCE_NETWORK       network this API serves, as named in the registry
+                           (rskMainnet / rskTestnet): MIPs are listed only when
+                           they have a changer there. Empty lists every MIP.
 """
 
 import asyncio
@@ -37,6 +44,11 @@ REGISTRY_URL = getenv(
     "GOVERNANCE_REGISTRY_URL",
     default="https://raw.githubusercontent.com/money-on-chain/proposals-changers/"
             "proposals_registry/docs/proposals/proposals.json")
+
+NETWORKS = ("rskMainnet", "rskTestnet")
+NETWORK = getenv("GOVERNANCE_NETWORK", default="") or None
+if NETWORK is not None and NETWORK not in NETWORKS:
+    raise ValueError(f"GOVERNANCE_NETWORK must be one of {', '.join(NETWORKS)}")
 
 TTL = 300
 MAX_REGISTRY_BYTES = 1024 * 1024
@@ -65,6 +77,15 @@ def normalize_mip(value):
     """'MIP#263101', 'MIP263101' or '263101' -> 'MIP#263101' (None if not a MIP)."""
     match = _MIP.match(value or "")
     return f"MIP#{match.group(1)}" if match else None
+
+
+def on_network(entry, network):
+    """The entry with only its changers on `network`, or None when it has
+    none there. A falsy `network` keeps every entry and changer."""
+    if not network:
+        return entry
+    changers = [c for c in entry["changers"] if c["network"] == network]
+    return {**entry, "changers": changers} if changers else None
 
 
 def _html_url(raw_url):
