@@ -45,6 +45,9 @@ echo "Build done!"
 
 docker tag aws_operations_web_service_$ENV:latest $AWS_ID.dkr.ecr.$AWS_REGION.amazonaws.com/aws_operations_web_service_$ENV:latest
 
+# ECR login tokens expire after 12 hours: log in right before pushing
+aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$AWS_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
+
 docker push $AWS_ID.dkr.ecr.$AWS_REGION.amazonaws.com/aws_operations_web_service_$ENV:latest
 
 echo "finish done!"
