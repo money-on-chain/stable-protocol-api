@@ -63,9 +63,8 @@ stable_protocol_api
 - `BACKEND_CORS_ORIGINS` controls which browser origins may read this API's responses. This API is public, read-only, and never sets cookies or reads `Authorization` headers (CORS credentials are always disabled), so `["*"]` is an acceptable value — needed because the dapp frontend is deployed to IPFS and can be viewed through any gateway (`ipfs.io`, `dweb.link`, a self-hosted gateway, etc.), so its origin can't be pinned to a fixed list.
 - `ALLOWED_HOSTS` is unrelated to the frontend's origin — it's the `Host` header this backend itself will accept. It must always be the API's own real hostname(s) for that environment (e.g. `api-operations.moneyonchain.com`), **never `["*"]`**, regardless of how open `BACKEND_CORS_ORIGINS` is.
 
-The `/api/v1/omoc/voting/proposals/{address}/content/` endpoint serves a proposal's write-up from the governance forum (Discourse), looked up by its changer address and cached in memory. Both settings are optional:
+The `/api/v1/omoc/voting/` endpoints serve the OMoC proposal history from the indexed VotingMachine events, matched by changer address to the MIP documents of the proposal registry ([money-on-chain/proposals-changers](https://github.com/money-on-chain/proposals-changers), `docs/proposals/proposals.json`). The registry and its documents are cached in memory for 5 minutes, and the last good copy is kept if a refresh fails.
 
-- `GOVERNANCE_FORUM_URL` — forum base url, defaults to `https://forum.moneyonchain.com`. Set it empty to disable the lookup (the endpoint then always returns 404).
-- `GOVERNANCE_FORUM_TOPICS` — JSON object of changer address → topic id, for proposals the forum search can't resolve, e.g. `'{"0x015F2836467Ce43E27D22b0d03929c371Ff1d0f1": 468}'`.
+- `GOVERNANCE_REGISTRY_URL` — url of `proposals.json`; documents and images are resolved relative to it. Defaults to the `proposals_registry` branch on raw.githubusercontent.com. Set it empty to disable the registry (proposals are then served with `listed: null`).
 
 

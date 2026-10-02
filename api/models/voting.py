@@ -38,6 +38,12 @@ class VotingProposal(BaseModel):
     proposal: str
     round: int
     status: str
+    # From the proposal registry; listed is None when it couldn't be read
+    listed: Optional[bool] = None
+    mip: Optional[str] = None
+    title: Optional[str] = None
+    summary: Optional[str] = None
+    forumUrl: Optional[str] = None
     proposer: Optional[str] = None
     createdAt: Optional[str] = None
     updatedAt: Optional[str] = None
@@ -54,6 +60,11 @@ class VotingProposal(BaseModel):
                 "proposal": "0xbe8c4d532969586616a6cfe33f4094858af22026",
                 "round": 13,
                 "status": "Executed",
+                "listed": True,
+                "mip": "MIP#263101",
+                "title": "Add RIF/USD and TasksRunner to OMOC; Use RIF/USD₮0 for Liquidity",
+                "summary": "Prepares OMOC for the RoC and MoC migration.",
+                "forumUrl": "https://forum.moneyonchain.com/t/add-rif-usd-and-tasksrunner-to-omoc-use-rif-usd-0-for-liquidity/468",
                 "proposer": "0xf3aedc384d880eae53d198551868c3574f10ec42",
                 "createdAt": "2026-09-02T01:41:31.000Z",
                 "updatedAt": "2026-09-02T03:32:21.000Z",
@@ -157,6 +168,9 @@ class VotingRoundSummary(BaseModel):
     round: int
     proposal: str
     status: str
+    listed: Optional[bool] = None
+    mip: Optional[str] = None
+    title: Optional[str] = None
     preVoteVotes: str = "0"
     inFavor: str = "0"
     against: str = "0"
@@ -178,13 +192,32 @@ class VotingStats(BaseModel):
     last_block_indexed: int = 0
 
 
-class ProposalContent(BaseModel):
-    proposal: str
-    topicId: int
+class RegistryChanger(BaseModel):
+    network: Optional[str] = None
+    name: Optional[str] = None
+    address: str
+
+
+class MipEntry(BaseModel):
+    mip: str
     title: Optional[str] = None
-    url: str
-    mip: Optional[str] = None
-    forumStatus: Optional[str] = None
-    createdAt: Optional[str] = None
-    raw: str
+    status: Optional[str] = None
+    date: Optional[str] = None
+    summary: Optional[str] = None
+    forumUrl: Optional[str] = None
+    file: str
+    documentUrl: str
+    changers: List[RegistryChanger]
+
+
+class MipEntryList(BaseModel):
+    results: List[MipEntry]
+    count: int = 0
+    total: int = 0
+
+
+class MipContent(MipEntry):
+    markdown: str
+    images: List[str]
+    assetsBaseUrl: str
     fetchedAt: str
