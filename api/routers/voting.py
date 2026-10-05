@@ -181,10 +181,11 @@ async def voting_mips(
         skip: SkipQuery = 0):
     """Returns the MIPs of the proposal registry that have a changer on the
     API's network (GOVERNANCE_NETWORK, or `network`), with only that network's
-    changers. Lists every MIP when no network is configured."""
+    changers. Drafts are not listed. Lists every non-draft MIP when no network
+    is configured."""
     entries = await require_registry()
     network = network or registry.NETWORK
-    results = [e for e in (registry.on_network(e, network)
+    results = [e for e in (registry.listable(e, network)
                            for e in entries["byMip"].values()) if e]
     results.sort(key=lambda e: e["mip"], reverse=True)
     page = results[skip:skip + limit]
@@ -199,13 +200,13 @@ async def voting_mips(
 )
 async def voting_mip(mip: MipPath, network: NetworkQuery = None):
     """Returns a MIP's registry entry and markdown document, like
-    /proposals/{address}/content/ but looked up by MIP number. 404 when the
-    MIP has no changer on the API's network (GOVERNANCE_NETWORK, or
-    `network`)."""
+    /proposals/{address}/content/ but looked up by MIP number. 404 for a
+    draft, or when the MIP has no changer on the API's network
+    (GOVERNANCE_NETWORK, or `network`)."""
     entries = await require_registry()
     entry = entries["byMip"].get(registry.normalize_mip(mip))
     if entry is not None:
-        entry = registry.on_network(entry, network or registry.NETWORK)
+        entry = registry.listable(entry, network or registry.NETWORK)
     if entry is None:
         raise HTTPException(status_code=404, detail="Not found")
     return await mip_content(entry)

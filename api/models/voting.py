@@ -19,10 +19,15 @@ class PreVoteStep(VotingTx):
 
 
 class VoteTally(BaseModel):
+    # inFavor includes fromPreVote: the pre-vote support the voting started
+    # with. voters is the voting phase only, supporters every address that
+    # pre-voted or voted in the round.
     inFavor: str = "0"
     against: str = "0"
     total: str = "0"
+    fromPreVote: str = "0"
     voters: int = 0
+    supporters: int = 0
 
 
 class VoteStep(VotingTx):
@@ -83,7 +88,9 @@ class VotingProposal(BaseModel):
                 "vote": {"inFavor": "15000001969999999999999998",
                          "against": "0",
                          "total": "15000001969999999999999998",
-                         "voters": 1},
+                         "fromPreVote": "15000001969999999999999998",
+                         "voters": 0,
+                         "supporters": 1},
                 "voteStep": {
                     "hash": "0x8e877a8de9588eba2c437806f60a598d41f3fbc98f232086388552274f2a1df1",
                     "blockNumber": 8033315,

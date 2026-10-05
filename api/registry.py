@@ -88,6 +88,14 @@ def on_network(entry, network):
     return {**entry, "changers": changers} if changers else None
 
 
+def listable(entry, network):
+    """The entry as the mips endpoints serve it: drafts are not shown, and
+    only MIPs with a changer on `network` (see on_network)."""
+    if entry.get("status") == "Draft":
+        return None
+    return on_network(entry, network)
+
+
 def _html_url(raw_url):
     """Browsable url of a raw.githubusercontent.com file, for document links."""
     match = _RAW_GITHUB.match(raw_url)

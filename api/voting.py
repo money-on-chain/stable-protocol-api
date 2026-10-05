@@ -95,6 +95,7 @@ async def _pre_vote_totals(db, match):
         out[key] = {
             "votes": wei_str(row["votes"]),
             "voters": len(row["voters"]),
+            "voterSet": set(row["voters"]),
             "proposer": row["first"].get("user"),
             "submitted": row["first"],
             "lastAt": row["lastAt"],
@@ -125,6 +126,7 @@ async def _vote_totals(db, match):
             "against": str(against),
             "total": str(in_favor + against),
             "voters": len(row["voters"]),
+            "voterSet": set(row["voters"]),
             "lastAt": row["lastAt"],
         }
     return out
@@ -210,6 +212,14 @@ async def build_proposal_records(db, proposal=None, keys=None):
         vs = vote_step.get(key)
         acs = accepted_step.get(key)
         unr = unregister.get(key)
+        # preVoteStep() starts the voting with the winner's pre-vote support
+        # as votes in favor (VotingDataLib._startVoting); vote() only adds to
+        # it, so a proposal can pass without a single VoteEvent.
+        from_pre_vote = int(pvs.get("votesInFavor") or 0) if pvs else 0
+        in_favor = from_pre_vote + int(vt["inFavor"] if vt else 0)
+        against = int(vt["against"] if vt else 0)
+        supporters = ((pv["voterSet"] if pv else set())
+                      | (vt["voterSet"] if vt else set()))
         records.append({
             "proposal": key[0],
             "round": key[1],
@@ -225,11 +235,17 @@ async def build_proposal_records(db, proposal=None, keys=None):
             },
             "preVoteStep": {**_tx(pvs), "votesInFavor": pvs.get("votesInFavor")}
             if pvs else None,
+            # Tallies as the contract counts them: inFavor includes the
+            # support carried from pre-voting (fromPreVote), voters counts
+            # only the voting phase and supporters every address that
+            # pre-voted or voted the proposal in this round.
             "vote": {
-                "inFavor": vt["inFavor"] if vt else "0",
-                "against": vt["against"] if vt else "0",
-                "total": vt["total"] if vt else "0",
+                "inFavor": str(in_favor),
+                "against": str(against),
+                "total": str(in_favor + against),
+                "fromPreVote": str(from_pre_vote),
                 "voters": vt["voters"] if vt else 0,
+                "supporters": len(supporters),
             },
             "voteStep": {**_tx(vs), "result": vs.get("result"),
                          "resultLabel": VOTE_RESULTS.get(vs.get("result"))}
