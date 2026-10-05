@@ -51,6 +51,11 @@ ProposerQuery = Annotated[Optional[str], Query(
     title="Proposer address",
     description="Optional filter by the address that submitted the proposal",
     pattern=ADDRESS_PATTERN)]
+TagQuery = Annotated[Optional[str], Query(
+    title="Tag",
+    description="Optional filter: MIPs tagged with this project "
+                "(doc, usdrif, oracles, voting, staking)",
+    pattern="^[a-z0-9-]{1,32}$")]
 NetworkQuery = Annotated[Optional[str], Query(
     title="Network",
     description="Overrides the API's network (GOVERNANCE_NETWORK): " +
@@ -177,16 +182,19 @@ async def voting_proposal_content(address: ProposalPath):
 )
 async def voting_mips(
         network: NetworkQuery = None,
+        tag: TagQuery = None,
         limit: LimitQuery = 100,
         skip: SkipQuery = 0):
     """Returns the MIPs of the proposal registry that have a changer on the
     API's network (GOVERNANCE_NETWORK, or `network`), with only that network's
-    changers. Drafts are not listed. Lists every non-draft MIP when no network
+    changers. Drafts are not listed; `tag` keeps the MIPs tagged with it. Lists every non-draft MIP when no network
     is configured."""
     entries = await require_registry()
     network = network or registry.NETWORK
     results = [e for e in (registry.listable(e, network)
                            for e in entries["byMip"].values()) if e]
+    if tag:
+        results = [e for e in results if tag in e["tags"]]
     results.sort(key=lambda e: e["mip"], reverse=True)
     page = results[skip:skip + limit]
     return {"results": page, "count": len(page), "total": len(results)}

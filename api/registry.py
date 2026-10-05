@@ -138,15 +138,24 @@ def _entry(raw):
     changers = []
     for changer in raw.get("changers") or []:
         if isinstance(changer, dict) and _ADDRESS.match(str(changer.get("address"))):
+            submitter = changer.get("submitter")
             changers.append({
                 "network": changer.get("network"),
                 "name": changer.get("name"),
                 "address": changer["address"],
+                # First preVote() sender; None until submitted
+                "submitter": submitter
+                if _ADDRESS.match(str(submitter)) else None,
             })
     document_url = urljoin(REGISTRY_URL, file)
+    tags = raw.get("tags")
     return {
         "mip": mip,
         "title": raw.get("title"),
+        # Projects the MIP changes (doc, usdrif, oracles, ...); the registry's
+        # validator owns the vocabulary
+        "tags": [t for t in tags if isinstance(t, str)]
+        if isinstance(tags, list) else [],
         "status": raw.get("status"),
         "date": raw.get("date"),
         "summary": raw.get("summary"),

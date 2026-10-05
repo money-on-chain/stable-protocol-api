@@ -203,11 +203,14 @@ class RegistryChanger(BaseModel):
     network: Optional[str] = None
     name: Optional[str] = None
     address: str
+    # Address that submitted the changer for voting (first preVote sender)
+    submitter: Optional[str] = None
 
 
 class MipEntry(BaseModel):
     mip: str
     title: Optional[str] = None
+    tags: List[str] = []
     status: Optional[str] = None
     date: Optional[str] = None
     summary: Optional[str] = None
