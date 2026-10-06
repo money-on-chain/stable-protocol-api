@@ -58,6 +58,7 @@ REQUEST_TIMEOUT = 8
 _RAW_GITHUB = re.compile(
     r"^https://raw\.githubusercontent\.com/([^/]+)/([^/]+)/(.+)$")
 _ADDRESS = re.compile(r"^0x[0-9a-fA-F]{40}$")
+_TX_HASH = re.compile(r"^0x[0-9a-fA-F]{64}$")
 _MIP = re.compile(r"^(?:MIP#?)?(\d{6})$", re.IGNORECASE)
 # ![alt](target "title") and [text](target), not inside code spans
 _IMAGE = re.compile(r"(!\[[^\]]*\]\()\s*<?([^)\s>]+)>?((?:\s+\"[^\"]*\")?\s*\))")
@@ -86,6 +87,25 @@ def on_network(entry, network):
         return entry
     changers = [c for c in entry["changers"] if c["network"] == network]
     return {**entry, "changers": changers} if changers else None
+
+
+def with_execution(entry, chain_executions):
+    """The entry with `executed`, `executedTx` and `executedAt`: whether one
+    of its changers was executed, from the indexed AcceptedStepEvents
+    (`chain_executions`: lowercase changer -> {"hash", "createdAt"}) or else
+    the registry's executedTx. The mainnet VotingMachine emits no events
+    until MIP#263501, so there the registry is the only record."""
+    for changer in entry["changers"]:
+        found = chain_executions.get(changer["address"].lower())
+        if found:
+            return {**entry, "executed": True, "executedTx": found["hash"],
+                    "executedAt": found["createdAt"]}
+    for changer in entry["changers"]:
+        if changer.get("executedTx"):
+            return {**entry, "executed": True,
+                    "executedTx": changer["executedTx"], "executedAt": None}
+    return {**entry, "executed": False, "executedTx": None,
+            "executedAt": None}
 
 
 def listable(entry, network):
@@ -139,6 +159,7 @@ def _entry(raw):
     for changer in raw.get("changers") or []:
         if isinstance(changer, dict) and _ADDRESS.match(str(changer.get("address"))):
             submitter = changer.get("submitter")
+            executed_tx = changer.get("executedTx")
             changers.append({
                 "network": changer.get("network"),
                 "name": changer.get("name"),
@@ -146,6 +167,10 @@ def _entry(raw):
                 # First preVote() sender; None until submitted
                 "submitter": submitter
                 if _ADDRESS.match(str(submitter)) else None,
+                # acceptedStep() transaction that executed it; None until
+                # executed or when only the indexed events record it
+                "executedTx": executed_tx
+                if _TX_HASH.match(str(executed_tx)) else None,
             })
     document_url = urljoin(REGISTRY_URL, file)
     tags = raw.get("tags")

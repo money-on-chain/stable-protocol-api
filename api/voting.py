@@ -377,6 +377,27 @@ async def user_participation(db, user):
     return out
 
 
+async def changer_executions(db, addresses):
+    """Lowercase changer -> {"hash", "createdAt"} of the acceptedStep() that
+    executed it successfully, from the indexed AcceptedStepEvents."""
+    addresses = [a.lower() for a in addresses]
+    if not addresses:
+        return {}
+    out = {}
+    cursor = db[ACCEPTED_STEP].find(
+        {"proposal": {"$in": addresses}, "success": True})
+    async for doc in cursor:
+        prev = out.get(doc["proposal"])
+        if prev is None or _event_order(doc) < prev["order"]:
+            out[doc["proposal"]] = {
+                "hash": doc.get("hash"),
+                "createdAt": mongo_date_to_str(doc.get("createdAt")),
+                "order": _event_order(doc),
+            }
+    return {k: {"hash": v["hash"], "createdAt": v["createdAt"]}
+            for k, v in out.items()}
+
+
 async def voting_stats(db):
     records = await build_proposal_records(db)
 

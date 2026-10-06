@@ -23,7 +23,7 @@ from fastapi.responses import JSONResponse
 from .common import get_env_var
 
 
-API_VERSION = '1.1.6'
+API_VERSION = '1.1.7'
 API_TITLE = 'Stable Protocol v1 API'
 API_DESCRIPTION = """
 This is a requirement for [stable-protocol-interface](https://github.com/money-on-chain/stable-protocol-interface)

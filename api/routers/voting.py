@@ -3,6 +3,7 @@ from typing import Annotated, Optional
 
 from api import registry, voting
 from api.logger import log
+from api.db import get_db
 from api.models.voting import \
     VotingProposalList, \
     VotingProposalDetail, \
@@ -85,6 +86,21 @@ async def require_registry():
     if value is None:
         raise HTTPException(status_code=404, detail="Proposal registry disabled")
     return value
+
+
+async def with_executions(entries):
+    """The entries with their execution (registry.with_execution): one query
+    for the indexed AcceptedStepEvents of all their changers. Without DB the
+    registry's executedTx is used alone."""
+    executions = {}
+    try:
+        db = await get_db()
+        if db is not None:
+            executions = await voting.changer_executions(
+                db, [c["address"] for e in entries for c in e["changers"]])
+    except Exception as e:
+        log.warning(f"Serving MIPs without indexed executions: {e}")
+    return [registry.with_execution(e, executions) for e in entries]
 
 
 async def mip_content(entry):
@@ -196,7 +212,7 @@ async def voting_mips(
     if tag:
         results = [e for e in results if tag in e["tags"]]
     results.sort(key=lambda e: e["mip"], reverse=True)
-    page = results[skip:skip + limit]
+    page = await with_executions(results[skip:skip + limit])
     return {"results": page, "count": len(page), "total": len(results)}
 
 
@@ -217,6 +233,7 @@ async def voting_mip(mip: MipPath, network: NetworkQuery = None):
         entry = registry.listable(entry, network or registry.NETWORK)
     if entry is None:
         raise HTTPException(status_code=404, detail="Not found")
+    [entry] = await with_executions([entry])
     return await mip_content(entry)
 
 

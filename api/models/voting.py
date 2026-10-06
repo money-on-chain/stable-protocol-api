@@ -205,6 +205,8 @@ class RegistryChanger(BaseModel):
     address: str
     # Address that submitted the changer for voting (first preVote sender)
     submitter: Optional[str] = None
+    # acceptedStep() transaction that executed it, as recorded in the registry
+    executedTx: Optional[str] = None
 
 
 class MipEntry(BaseModel):
@@ -218,6 +220,11 @@ class MipEntry(BaseModel):
     file: str
     documentUrl: str
     changers: List[RegistryChanger]
+    # Whether a changer of this MIP was executed on the network: from the
+    # indexed events (with executedAt) or the registry's executedTx
+    executed: bool = False
+    executedTx: Optional[str] = None
+    executedAt: Optional[str] = None
 
 
 class MipEntryList(BaseModel):
