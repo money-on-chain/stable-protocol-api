@@ -89,23 +89,48 @@ def on_network(entry, network):
     return {**entry, "changers": changers} if changers else None
 
 
-def with_execution(entry, chain_executions):
-    """The entry with `executed`, `executedTx` and `executedAt`: whether one
-    of its changers was executed, from the indexed AcceptedStepEvents
-    (`chain_executions`: lowercase changer -> {"hash", "createdAt"}) or else
-    the registry's executedTx. The mainnet VotingMachine emits no events
-    until MIP#263501, so there the registry is the only record."""
+def with_execution(entry, chain_executions, latest_records=None):
+    """The entry with its execution and voting outcome on the network.
+
+    `executed`, `executedTx`, `executedAt`: whether one of its changers was
+    executed, from the indexed AcceptedStepEvents (`chain_executions`:
+    lowercase changer -> {"hash", "createdAt"}) or else the registry's
+    executedTx. The mainnet VotingMachine emits no events until MIP#263501, so
+    there the registry is the only record.
+
+    `outcome`, `outcomeRound`: the voting status of the MIP's latest attempt,
+    the newest indexed record among its changers (`latest_records`: lowercase
+    changer -> record, see voting.latest_changer_records). Same values as the
+    records' status (PreVoting, Voting, Accepted, NoQuorum, Vetoed - rejected
+    by votes against or the collateral veto -, NotSelected, Unregistered,
+    Executed, ExecutionFailed). "Executed" with no round when only the
+    registry knows it; None when nothing is known. A PreVoting outcome may
+    have expired: the events don't carry the pre-vote expiration, so clients
+    tell it from the live contract state."""
+    out = {**entry, "executed": False, "executedTx": None,
+           "executedAt": None, "outcome": None, "outcomeRound": None}
     for changer in entry["changers"]:
         found = chain_executions.get(changer["address"].lower())
         if found:
-            return {**entry, "executed": True, "executedTx": found["hash"],
-                    "executedAt": found["createdAt"]}
+            out.update(executed=True, executedTx=found["hash"],
+                       executedAt=found["createdAt"])
+            break
+    else:
+        for changer in entry["changers"]:
+            if changer.get("executedTx"):
+                out.update(executed=True, executedTx=changer["executedTx"])
+                break
+
+    latest = None
     for changer in entry["changers"]:
-        if changer.get("executedTx"):
-            return {**entry, "executed": True,
-                    "executedTx": changer["executedTx"], "executedAt": None}
-    return {**entry, "executed": False, "executedTx": None,
-            "executedAt": None}
+        rec = (latest_records or {}).get(changer["address"].lower())
+        if rec and (latest is None or rec["round"] > latest["round"]):
+            latest = rec
+    if latest is not None:
+        out.update(outcome=latest["status"], outcomeRound=latest["round"])
+    elif out["executed"]:
+        out["outcome"] = "Executed"
+    return out
 
 
 def listable(entry, network):

@@ -89,18 +89,20 @@ async def require_registry():
 
 
 async def with_executions(entries):
-    """The entries with their execution (registry.with_execution): one query
-    for the indexed AcceptedStepEvents of all their changers. Without DB the
-    registry's executedTx is used alone."""
-    executions = {}
+    """The entries with their execution and voting outcome
+    (registry.with_execution): the indexed AcceptedStepEvents and latest
+    records of all their changers. Without DB only the registry's executedTx
+    is used."""
+    executions, latest = {}, {}
     try:
         db = await get_db()
         if db is not None:
-            executions = await voting.changer_executions(
-                db, [c["address"] for e in entries for c in e["changers"]])
+            addresses = [c["address"] for e in entries for c in e["changers"]]
+            executions = await voting.changer_executions(db, addresses)
+            latest = await voting.latest_changer_records(db, addresses)
     except Exception as e:
-        log.warning(f"Serving MIPs without indexed executions: {e}")
-    return [registry.with_execution(e, executions) for e in entries]
+        log.warning(f"Serving MIPs without indexed voting data: {e}")
+    return [registry.with_execution(e, executions, latest) for e in entries]
 
 
 async def mip_content(entry):

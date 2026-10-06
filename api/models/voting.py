@@ -225,6 +225,12 @@ class MipEntry(BaseModel):
     executed: bool = False
     executedTx: Optional[str] = None
     executedAt: Optional[str] = None
+    # Voting status of the MIP's latest attempt on the network (newest indexed
+    # record of its changers: PreVoting, Voting, Accepted, NoQuorum, Vetoed,
+    # NotSelected, Unregistered, Executed, ExecutionFailed), "Executed" from
+    # the registry alone, or None when unknown
+    outcome: Optional[str] = None
+    outcomeRound: Optional[int] = None
 
 
 class MipEntryList(BaseModel):
