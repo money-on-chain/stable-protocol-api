@@ -43,7 +43,7 @@ from api.logger import log
 REGISTRY_URL = getenv(
     "GOVERNANCE_REGISTRY_URL",
     default="https://raw.githubusercontent.com/money-on-chain/proposals-changers/"
-            "proposals_registry/docs/proposals/proposals.json")
+            "main/docs/proposals/proposals.json")
 
 NETWORKS = ("rskMainnet", "rskTestnet")
 NETWORK = getenv("GOVERNANCE_NETWORK", default="") or None
