@@ -471,6 +471,65 @@ class SupportersWithdrawStakeList(BaseModel):
         }
 
 
+class StakingOperation(BaseModel):
+    """A row of the indexer's `omoc_operations` collection, restricted to the
+    staking flow. Fields are the union of the Supporters_* and DelayMachine_*
+    events; which ones are set depends on `operation`. Note Supporters_*
+    `amount` is in internal supporters tokens - use `mocs` for the MoC value -
+    while DelayMachine_* `amount` is already in MoC. DelayMachine_PaymentDeposit
+    `expiration` is the lock duration in seconds (not a timestamp): the
+    payment unlocks at createdAt + expiration."""
+    id: str = Field(default_factory=uuid.uuid4, alias="_id")
+    hash: Optional[str] = None
+    blockNumber: Optional[int] = None
+    operation: Optional[str] = None
+    idTx: Optional[int] = Field(default=None, alias="id")
+    user: Optional[str] = None
+    subaccount: Optional[str] = None
+    sender: Optional[str] = None
+    source: Optional[str] = None
+    destination: Optional[str] = None
+    amount: Optional[str] = None
+    mocs: Optional[str] = None
+    expiration: Optional[int] = None
+    createdAt: Optional[datetime.datetime] = None
+    lastUpdatedAt: Optional[datetime.datetime] = None
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "_id": "658dac848e6961287ceb62e5",
+                "hash": "0xaddc1a3b49fcd5528a4a394d98e095c1f89475e1e30b9a237e93231c15e4a265",
+                "blockNumber": 4643915,
+                "operation": "DelayMachine_PaymentDeposit",
+                "idTx": 15,
+                "source": "0xCD8A1c9aCc980ae031456573e34dC05cD7daE6e3",
+                "destination": "0xF20Ee80f56F41b6323D140b07A011c77509Fb99D",
+                "amount": "177577695063561323",
+                "expiration": 1209600,
+                "createdAt": "2023-12-28T14:15:01.629000Z",
+                "lastUpdatedAt": "2023-12-28T14:15:01.629000Z"
+            }
+        }
+
+
+class StakingOperationList(BaseModel):
+    results: List[StakingOperation]
+    count: int = 0
+    total: int = 0
+    last_block_indexed: int = 0
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "results": "[]",
+                "count": "0",
+                "total": "0",
+                "last_block_indexed": "12345678"
+            }
+        }
+
+
 class VotingMachineVoteEvent(BaseModel):
     id: str = Field(default_factory=uuid.uuid4, alias="_id")
     hash: Optional[str] = None

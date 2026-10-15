@@ -14,6 +14,7 @@ from api.models.omoc import DATE_FIELDS, \
     SupportersPayEarningsList, \
     SupportersWithdrawList, \
     SupportersWithdrawStakeList, \
+    StakingOperationList, \
     VotingMachinePreVoteEventList, \
     VotingMachineVoteEventList, \
     VotingMachinePreVoteStepEventList, \
@@ -53,6 +54,11 @@ HolderQuery = Annotated[str, Query(
     title="Holder address",
     description="Holder Address",
     regex='^0x[a-fA-F0-9]{40}$')]
+StakerQuery = Annotated[str, Query(
+    title="Staker address",
+    description="Address that staked: the user's wallet, or its vesting "
+                "contract for vesting holders",
+    regex='^0x[a-fA-F0-9]{40}$')]
 AddressFilterQuery = Annotated[Optional[str], Query(
     title="Address",
     description="Optional filter matching the given address against any of the "
@@ -73,6 +79,17 @@ CoinPairAddressQuery = Annotated[Optional[str], Query(
     regex='^0x[a-fA-F0-9]{40}$')]
 
 DEFAULT_HOLDER = '0xCD8A1c9aCc980ae031456573e34dC05cD7daE6e3'
+
+# `omoc_operations` rows that make up a user's staking history, grouped by the
+# field holding the end user's address: Supporters_* are emitted with the
+# StakingMachine as `user` and the staker as `subaccount`; DelayMachine_* with
+# the StakingMachine as `source` and the staker as `destination`.
+STAKING_SUPPORTERS_OPERATIONS = ["Supporters_AddStake", "Supporters_WithdrawStake"]
+STAKING_DELAY_MACHINE_OPERATIONS = [
+    "DelayMachine_PaymentDeposit",
+    "DelayMachine_PaymentCancel",
+    "DelayMachine_PaymentWithdraw",
+]
 
 
 def address_in_any(address, fields):
@@ -307,6 +324,35 @@ async def supporters_withdraw_stake(
         db, "event_Supporters_WithdrawStake", limit=limit, skip=skip,
         query_filter=address_in_any(address, ("user", "subaccount", "destination")),
         collation=CASE_INSENSITIVE_COLLATION if address else None)
+
+
+# --- Staking operations ----------------------------------------------------------
+
+@router.get(
+    "/api/v1/omoc/staking_operations/",
+    response_description="Returns the staking operations of an address",
+    response_model=StakingOperationList,
+    responses=make_responses(503),
+)
+async def staking_operations(
+        address: StakerQuery,
+        limit: LimitQuery = 20,
+        skip: SkipQuery = 0):
+    """Returns the staking history (stake, unstake, cancel and withdraw of a
+    pending withdrawal) of the given address, newest first. For vesting
+    holders pass the vesting contract address, which is the one that stakes.
+    A single user action can emit more than one row with the same hash (e.g.
+    unstake = Supporters_WithdrawStake + DelayMachine_PaymentDeposit)."""
+    db = await require_db()
+    return await list_events(
+        db, "omoc_operations", limit=limit, skip=skip,
+        query_filter={"$or": [
+            {"operation": {"$in": STAKING_SUPPORTERS_OPERATIONS},
+             "subaccount": address},
+            {"operation": {"$in": STAKING_DELAY_MACHINE_OPERATIONS},
+             "destination": address},
+        ]},
+        collation=CASE_INSENSITIVE_COLLATION)
 
 
 # --- Voting Machine ---------------------------------------------------------------
