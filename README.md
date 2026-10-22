@@ -6,7 +6,7 @@ API list operations of the users dapp. This is a requirement for [stable-protoco
 
 Requirements:
 
-* Python 3.9+
+* Python 3.11+ (the Docker image uses 3.12)
 * Mongo DB installed also DB, User & pass created
 * [Stable-protocol-indexer](https://github.com/money-on-chain/stable-protocol-indexer)Protocol Indexer installed & Running in the same Mongo DB
 
@@ -57,6 +57,8 @@ docker run -d \
 --env COMMISSION_SPLITTER_V2=0xce4548BC0b865197D94E15a5440299398aB9d32E
 stable_protocol_api
 ```
+
+`APP_MONGO_TIMEOUT_MS` (default `20000`) caps every database operation; a query that runs longer returns 503. Keep it below nginx's `proxy_read_timeout` (60s).
 
 `BACKEND_CORS_ORIGINS` and `ALLOWED_HOSTS` must be JSON arrays of strings, and they protect two different things:
 

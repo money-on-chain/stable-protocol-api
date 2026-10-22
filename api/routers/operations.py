@@ -60,7 +60,7 @@ async def transactions_list(
         address: Annotated[str, Query(
             title="Address",
             description="User Address",
-            regex='^0x[a-fA-F0-9]{40}$')] = '0xCD8A1c9aCc980ae031456573e34dC05cD7daE6e3',
+            pattern='^0x[a-fA-F0-9]{40}$')] = '0xCD8A1c9aCc980ae031456573e34dC05cD7daE6e3',
         token: TokenName = None,
         limit: Annotated[int, Query(
             title="Limit",

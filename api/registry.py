@@ -31,9 +31,10 @@ import asyncio
 import datetime
 import json
 import re
+import ssl
 import time
 from os import getenv
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlsplit
 
 import httpx
 
@@ -64,6 +65,13 @@ _MIP = re.compile(r"^(?:MIP#?)?(\d{6})$", re.IGNORECASE)
 _IMAGE = re.compile(r"(!\[[^\]]*\]\()\s*<?([^)\s>]+)>?((?:\s+\"[^\"]*\")?\s*\))")
 _LINK = re.compile(r"((?<!!)\[[^\]]*\]\()\s*<?([^)\s>]+)>?((?:\s+\"[^\"]*\")?\s*\))")
 _SCHEME = re.compile(r"^[a-zA-Z][a-zA-Z0-9+.-]*:|^//|^#")
+# [label]: target  (reference-style link definitions)
+_REFERENCE = re.compile(r"^( {0,3}\[[^\]]+\]:[ \t]*)<?([^\s>]+)>?", re.MULTILINE)
+# <scheme:...>  (autolinks)
+_AUTOLINK = re.compile(r"<([a-zA-Z][a-zA-Z0-9+.-]{1,31}:[^<>\s]*)>")
+# Link schemes served to the dapp; anything else (javascript:, data:, ...) is
+# dropped, so a compromised or mistaken registry can't put script urls in it
+_SAFE_SCHEMES = ("http", "https", "mailto")
 
 _registry = {"expires": 0.0, "value": None}
 _documents = {}
@@ -141,6 +149,19 @@ def listable(entry, network):
     return on_network(entry, network)
 
 
+def _safe_url(url):
+    """True for a relative url or one with a scheme in _SAFE_SCHEMES."""
+    scheme = urlsplit(url).scheme
+    return not scheme or scheme.lower() in _SAFE_SCHEMES
+
+
+def _web_url(value):
+    """`value` when it is an absolute http(s) url, else None."""
+    if not isinstance(value, str):
+        return None
+    return value if urlsplit(value).scheme.lower() in ("http", "https") else None
+
+
 def _html_url(raw_url):
     """Browsable url of a raw.githubusercontent.com file, for document links."""
     match = _RAW_GITHUB.match(raw_url)
@@ -167,8 +188,16 @@ async def _get(client, url, max_bytes):
         raise RegistryUnavailable(f"{type(e).__name__}: {e}") from e
 
 
+# Verify against the system trust store rather than httpx's default (certifi):
+# Dockerfile.api prunes it of distrusted roots (eMudhra, Oct 2026) without
+# waiting for a certifi release. Python does no revocation checking, so the
+# trust store is the only defense against a compromised CA.
+_TLS_CONTEXT = ssl.create_default_context()
+
+
 def _client():
     return httpx.AsyncClient(timeout=REQUEST_TIMEOUT, follow_redirects=True,
+                             verify=_TLS_CONTEXT,
                              headers={"User-Agent": "stable-protocol-api"})
 
 
@@ -209,7 +238,7 @@ def _entry(raw):
         "status": raw.get("status"),
         "date": raw.get("date"),
         "summary": raw.get("summary"),
-        "forumUrl": raw.get("forumUrl"),
+        "forumUrl": _web_url(raw.get("forumUrl")),
         "file": file,
         "documentUrl": _html_url(document_url),
         "changers": changers,
@@ -274,6 +303,8 @@ def _rewrite_links(markdown, document_url):
         target = match.group(2)
         if not _SCHEME.match(target):
             target = urljoin(document_url, target)
+        elif not _safe_url(target):
+            target = "#"
         # Only the repo's own images; the dapp shows nothing else
         if target.startswith(assets_base):
             images.append(target)
@@ -283,12 +314,23 @@ def _rewrite_links(markdown, document_url):
         target = match.group(2)
         if not _SCHEME.match(target):
             target = _html_url(urljoin(document_url, target))
+        elif not _safe_url(target):
+            target = "#"
         return f"{match.group(1)}{target}{match.group(3)}"
+
+    def reference(match):
+        target = match.group(2)
+        return f"{match.group(1)}{target if _safe_url(target) else '#'}"
+
+    def autolink(match):
+        # An unsafe one is left as plain text
+        return match.group(0) if _safe_url(match.group(1)) else match.group(1)
 
     # Leave fenced code blocks untouched
     parts = re.split(r"(```[\s\S]*?```)", markdown)
     for i in range(0, len(parts), 2):
         parts[i] = _LINK.sub(link, _IMAGE.sub(image, parts[i]))
+        parts[i] = _AUTOLINK.sub(autolink, _REFERENCE.sub(reference, parts[i]))
     return "".join(parts), list(dict.fromkeys(images))
 
 

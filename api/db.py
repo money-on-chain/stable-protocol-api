@@ -20,6 +20,12 @@ COMMISSION_SPLITTER_V2 = getenv("COMMISSION_SPLITTER_V2", default="0x")
 # may be read-only, so it never creates indexes itself.
 CASE_INSENSITIVE_COLLATION = Collation(locale="en", strength=2)
 
+# Upper bound for every operation (pymongo client-side operation timeout,
+# also sent to the server as maxTimeMS), so an expensive public query - the
+# stats and voting aggregations scan whole collections - can't keep the DB
+# busy indefinitely. Keep it below nginx's proxy_read_timeout.
+MONGO_TIMEOUT_MS = int(getenv("APP_MONGO_TIMEOUT_MS", default="20000"))
+
 def _mask_mongo_uri(uri: str) -> str:
     return re.sub(r"://[^@/]+@", "://***:***@", uri)
 
@@ -36,7 +42,7 @@ async def connect_and_init_db():
     global db_client
     uri = getenv("APP_MONGO_URI", default="mongodb://localhost:27017")
     try:
-        db_client = AsyncIOMotorClient(uri)
+        db_client = AsyncIOMotorClient(uri, timeoutMS=MONGO_TIMEOUT_MS)
         server_info = await db_client.server_info()
         log.info(f"Connected to mongo! (version {server_info['version']}).")
     except Exception as e:
