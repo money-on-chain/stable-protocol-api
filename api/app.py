@@ -17,13 +17,14 @@ from api.logger import log
 from api.db import connect_and_init_db, close_db_connect
 
 from pymongo.errors import ServerSelectionTimeoutError as MongoTimeout
+from pymongo.errors import ExecutionTimeout, NetworkTimeout
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
 from .common import get_env_var
 
 
-API_VERSION = '1.1.7'
+API_VERSION = '1.1.8'
 API_TITLE = 'Stable Protocol v1 API'
 API_DESCRIPTION = """
 This is a requirement for [stable-protocol-interface](https://github.com/money-on-chain/stable-protocol-interface)
@@ -79,7 +80,16 @@ async def db_error_exception_handler(request: Request,
     return JSONResponse(
         status_code=503,
         content={"detail": "Cannot get DB access"},
-    )    
+    )
+
+@app.exception_handler(ExecutionTimeout)
+@app.exception_handler(NetworkTimeout)
+async def db_query_timeout_exception_handler(request: Request, exc):
+    # A query that ran past APP_MONGO_TIMEOUT_MS
+    return JSONResponse(
+        status_code=503,
+        content={"detail": "Database query timed out"},
+    )
 
 BACKEND_CORS_ORIGINS = get_env_var("BACKEND_CORS_ORIGINS", list)
 ALLOWED_HOSTS = get_env_var("ALLOWED_HOSTS", list)

@@ -48,35 +48,35 @@ tags_metadata = [{
 
 router = APIRouter(tags=["OMoC"])
 
-LimitQuery = Annotated[int, Query(title="Limit", description="Limit", le=100)]
-SkipQuery = Annotated[int, Query(title="Skip", description="Skip", le=1000)]
+LimitQuery = Annotated[int, Query(title="Limit", description="Limit", ge=1, le=100)]
+SkipQuery = Annotated[int, Query(title="Skip", description="Skip", ge=0, le=1000)]
 HolderQuery = Annotated[str, Query(
     title="Holder address",
     description="Holder Address",
-    regex='^0x[a-fA-F0-9]{40}$')]
+    pattern='^0x[a-fA-F0-9]{40}$')]
 StakerQuery = Annotated[str, Query(
     title="Staker address",
     description="Address that staked: the user's wallet, or its vesting "
                 "contract for vesting holders",
-    regex='^0x[a-fA-F0-9]{40}$')]
+    pattern='^0x[a-fA-F0-9]{40}$')]
 AddressFilterQuery = Annotated[Optional[str], Query(
     title="Address",
     description="Optional filter matching the given address against any of the "
                 "event's address fields",
-    regex='^0x[a-fA-F0-9]{40}$')]
+    pattern='^0x[a-fA-F0-9]{40}$')]
 ProposalQuery = Annotated[Optional[str], Query(
     title="Proposal address",
     description="Optional filter by the proposal (ChangeContract) address",
-    regex='^0x[a-fA-F0-9]{40}$')]
+    pattern='^0x[a-fA-F0-9]{40}$')]
 CallerQuery = Annotated[Optional[str], Query(
     title="Caller address",
     description="Optional filter by the caller address",
-    regex='^0x[a-fA-F0-9]{40}$')]
+    pattern='^0x[a-fA-F0-9]{40}$')]
 CoinPairAddressQuery = Annotated[Optional[str], Query(
     title="Coin pair address",
     description="Optional filter by the CoinPairPrice contract address "
                 "(one deployment per coin pair)",
-    regex='^0x[a-fA-F0-9]{40}$')]
+    pattern='^0x[a-fA-F0-9]{40}$')]
 
 DEFAULT_HOLDER = '0xCD8A1c9aCc980ae031456573e34dC05cD7daE6e3'
 
