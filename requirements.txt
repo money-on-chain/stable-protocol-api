@@ -4,7 +4,10 @@ fastapi==0.159.1
 starlette==1.9.0
 motor==3.7.1
 pydantic==2.14.1
-pymongo==4.19.0
+# Last release supporting MongoDB 4.2 (testnet's server; 4.18+ need 4.4).
+# It lacks the 2026 fixes (PYSEC-2026-4294..4297, fixed in 4.18.2): move to
+# 4.18.2+ once every environment's MongoDB is 4.4 or newer.
+pymongo==4.17.0
 uvicorn==0.54.0
 python-dotenv==1.2.4
 tabulate==0.10.0
