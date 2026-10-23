@@ -60,6 +60,7 @@ _RAW_GITHUB = re.compile(
     r"^https://raw\.githubusercontent\.com/([^/]+)/([^/]+)/(.+)$")
 _ADDRESS = re.compile(r"^0x[0-9a-fA-F]{40}$")
 _TX_HASH = re.compile(r"^0x[0-9a-fA-F]{64}$")
+_TIMESTAMP = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
 _MIP = re.compile(r"^(?:MIP#?)?(\d{6})$", re.IGNORECASE)
 # ![alt](target "title") and [text](target), not inside code spans
 _IMAGE = re.compile(r"(!\[[^\]]*\]\()\s*<?([^)\s>]+)>?((?:\s+\"[^\"]*\")?\s*\))")
@@ -103,8 +104,8 @@ def with_execution(entry, chain_executions, latest_records=None):
     `executed`, `executedTx`, `executedAt`: whether one of its changers was
     executed, from the indexed AcceptedStepEvents (`chain_executions`:
     lowercase changer -> {"hash", "createdAt"}) or else the registry's
-    executedTx. The mainnet VotingMachine emits no events until MIP#263501, so
-    there the registry is the only record.
+    executedTx and executedAt. The mainnet VotingMachine emits no events until
+    MIP#263501, so there the registry is the only record.
 
     `outcome`, `outcomeRound`: the voting status of the MIP's latest attempt,
     the newest indexed record among its changers (`latest_records`: lowercase
@@ -114,9 +115,13 @@ def with_execution(entry, chain_executions, latest_records=None):
     Executed, ExecutionFailed). "Executed" with no round when only the
     registry knows it; None when nothing is known. A PreVoting outcome may
     have expired: the events don't carry the pre-vote expiration, so clients
-    tell it from the live contract state."""
+    tell it from the live contract state.
+
+    `submittedAt`: when that latest attempt was submitted for voting (its
+    first event); None without indexed events."""
     out = {**entry, "executed": False, "executedTx": None,
-           "executedAt": None, "outcome": None, "outcomeRound": None}
+           "executedAt": None, "outcome": None, "outcomeRound": None,
+           "submittedAt": None}
     for changer in entry["changers"]:
         found = chain_executions.get(changer["address"].lower())
         if found:
@@ -126,7 +131,8 @@ def with_execution(entry, chain_executions, latest_records=None):
     else:
         for changer in entry["changers"]:
             if changer.get("executedTx"):
-                out.update(executed=True, executedTx=changer["executedTx"])
+                out.update(executed=True, executedTx=changer["executedTx"],
+                           executedAt=changer.get("executedAt"))
                 break
 
     latest = None
@@ -135,10 +141,19 @@ def with_execution(entry, chain_executions, latest_records=None):
         if rec and (latest is None or rec["round"] > latest["round"]):
             latest = rec
     if latest is not None:
-        out.update(outcome=latest["status"], outcomeRound=latest["round"])
+        out.update(outcome=latest["status"], outcomeRound=latest["round"],
+                   submittedAt=latest.get("createdAt"))
     elif out["executed"]:
         out["outcome"] = "Executed"
     return out
+
+
+def last_activity(entry):
+    """Sort key of a with_execution() entry: its latest execution or
+    submission for voting, else its forum date. All are ISO 8601 in UTC, so
+    their first 19 characters compare as text."""
+    dates = [entry.get("executedAt"), entry.get("submittedAt")]
+    return max((d[:19] for d in dates if d), default=entry.get("date") or "")
 
 
 def listable(entry, network):
@@ -214,6 +229,7 @@ def _entry(raw):
         if isinstance(changer, dict) and _ADDRESS.match(str(changer.get("address"))):
             submitter = changer.get("submitter")
             executed_tx = changer.get("executedTx")
+            executed_at = changer.get("executedAt")
             changers.append({
                 "network": changer.get("network"),
                 "name": changer.get("name"),
@@ -225,6 +241,10 @@ def _entry(raw):
                 # executed or when only the indexed events record it
                 "executedTx": executed_tx
                 if _TX_HASH.match(str(executed_tx)) else None,
+                # Timestamp of executedTx's block (UTC)
+                "executedAt": executed_at
+                if _TX_HASH.match(str(executed_tx))
+                and _TIMESTAMP.match(str(executed_at)) else None,
             })
     document_url = urljoin(REGISTRY_URL, file)
     tags = raw.get("tags")
