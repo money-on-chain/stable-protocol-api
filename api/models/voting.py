@@ -207,6 +207,8 @@ class RegistryChanger(BaseModel):
     submitter: Optional[str] = None
     # acceptedStep() transaction that executed it, as recorded in the registry
     executedTx: Optional[str] = None
+    # Timestamp of executedTx's block (UTC), as recorded in the registry
+    executedAt: Optional[str] = None
 
 
 class MipEntry(BaseModel):
@@ -221,7 +223,7 @@ class MipEntry(BaseModel):
     documentUrl: str
     changers: List[RegistryChanger]
     # Whether a changer of this MIP was executed on the network: from the
-    # indexed events (with executedAt) or the registry's executedTx
+    # indexed events or the registry's executedTx and executedAt
     executed: bool = False
     executedTx: Optional[str] = None
     executedAt: Optional[str] = None
@@ -231,6 +233,8 @@ class MipEntry(BaseModel):
     # the registry alone, or None when unknown
     outcome: Optional[str] = None
     outcomeRound: Optional[int] = None
+    # When that latest attempt was submitted for voting (first indexed event)
+    submittedAt: Optional[str] = None
 
 
 class MipEntryList(BaseModel):

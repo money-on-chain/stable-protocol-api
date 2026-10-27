@@ -194,7 +194,8 @@ async def voting_proposal_content(address: ProposalPath):
 
 @router.get(
     "/api/v1/omoc/voting/mips/",
-    response_description="Returns the proposal registry, newest MIP first",
+    response_description="Returns the proposal registry, latest activity "
+                         "first",
     response_model=MipEntryList,
     responses=make_responses(503),
 )
@@ -206,15 +207,18 @@ async def voting_mips(
     """Returns the MIPs of the proposal registry that have a changer on the
     API's network (GOVERNANCE_NETWORK, or `network`), with only that network's
     changers. Drafts are not listed; `tag` keeps the MIPs tagged with it. Lists every non-draft MIP when no network
-    is configured."""
+    is configured. Sorted by latest activity: execution or submission for
+    voting, else forum date."""
     entries = await require_registry()
     network = network or registry.NETWORK
     results = [e for e in (registry.listable(e, network)
                            for e in entries["byMip"].values()) if e]
     if tag:
         results = [e for e in results if tag in e["tags"]]
-    results.sort(key=lambda e: e["mip"], reverse=True)
-    page = await with_executions(results[skip:skip + limit])
+    results = await with_executions(results)
+    results.sort(key=lambda e: (registry.last_activity(e), e["mip"]),
+                 reverse=True)
+    page = results[skip:skip + limit]
     return {"results": page, "count": len(page), "total": len(results)}
 
 
